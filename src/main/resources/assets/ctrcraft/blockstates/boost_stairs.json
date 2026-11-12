@@ -1,0 +1,604 @@
+{
+  "variants": {
+    "direction=up,facing=east,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_180",
+      "y": 270
+    },
+    "direction=right,facing=east,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_270",
+      "y": 270
+    },
+    "direction=down,facing=east,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_0",
+      "y": 270
+    },
+    "direction=left,facing=east,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_90",
+      "y": 270
+    },
+    "direction=up,facing=east,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_90"
+    },
+    "direction=right,facing=east,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_180"
+    },
+    "direction=down,facing=east,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_270"
+    },
+    "direction=left,facing=east,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_0"
+    },
+    "direction=up,facing=east,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_180",
+      "y": 270
+    },
+    "direction=right,facing=east,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_270",
+      "y": 270
+    },
+    "direction=down,facing=east,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_0",
+      "y": 270
+    },
+    "direction=left,facing=east,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_90",
+      "y": 270
+    },
+    "direction=up,facing=east,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_90"
+    },
+    "direction=right,facing=east,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_180"
+    },
+    "direction=down,facing=east,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_270"
+    },
+    "direction=left,facing=east,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_0"
+    },
+    "direction=up,facing=east,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_90"
+    },
+    "direction=right,facing=east,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_180"
+    },
+    "direction=down,facing=east,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_270"
+    },
+    "direction=left,facing=east,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_0"
+    },
+    "direction=up,facing=east,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_90"
+    },
+    "direction=right,facing=east,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_180"
+    },
+    "direction=down,facing=east,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_270"
+    },
+    "direction=left,facing=east,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_0"
+    },
+    "direction=up,facing=east,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_0",
+      "y": 90
+    },
+    "direction=right,facing=east,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_90",
+      "y": 90
+    },
+    "direction=down,facing=east,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_180",
+      "y": 90
+    },
+    "direction=left,facing=east,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_270",
+      "y": 90
+    },
+    "direction=up,facing=east,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_90"
+    },
+    "direction=right,facing=east,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_180"
+    },
+    "direction=down,facing=east,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_270"
+    },
+    "direction=left,facing=east,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_0"
+    },
+    "direction=up,facing=east,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_0",
+      "y": 90
+    },
+    "direction=right,facing=east,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_90",
+      "y": 90
+    },
+    "direction=down,facing=east,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_180",
+      "y": 90
+    },
+    "direction=left,facing=east,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_270",
+      "y": 90
+    },
+    "direction=up,facing=east,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_90"
+    },
+    "direction=right,facing=east,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_180"
+    },
+    "direction=down,facing=east,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_270"
+    },
+    "direction=left,facing=east,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_0"
+    },
+    "direction=up,facing=north,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_180",
+      "y": 180
+    },
+    "direction=right,facing=north,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_270",
+      "y": 180
+    },
+    "direction=down,facing=north,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_0",
+      "y": 180
+    },
+    "direction=left,facing=north,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_90",
+      "y": 180
+    },
+    "direction=up,facing=north,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_90",
+      "y": 270
+    },
+    "direction=right,facing=north,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_180",
+      "y": 270
+    },
+    "direction=down,facing=north,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_270",
+      "y": 270
+    },
+    "direction=left,facing=north,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_0",
+      "y": 270
+    },
+    "direction=up,facing=north,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_180",
+      "y": 180
+    },
+    "direction=right,facing=north,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_270",
+      "y": 180
+    },
+    "direction=down,facing=north,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_0",
+      "y": 180
+    },
+    "direction=left,facing=north,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_90",
+      "y": 180
+    },
+    "direction=up,facing=north,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_90",
+      "y": 270
+    },
+    "direction=right,facing=north,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_180",
+      "y": 270
+    },
+    "direction=down,facing=north,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_270",
+      "y": 270
+    },
+    "direction=left,facing=north,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_0",
+      "y": 270
+    },
+    "direction=up,facing=north,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_90",
+      "y": 270
+    },
+    "direction=right,facing=north,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_180",
+      "y": 270
+    },
+    "direction=down,facing=north,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_270",
+      "y": 270
+    },
+    "direction=left,facing=north,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_0",
+      "y": 270
+    },
+    "direction=up,facing=north,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_90",
+      "y": 270
+    },
+    "direction=right,facing=north,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_180",
+      "y": 270
+    },
+    "direction=down,facing=north,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_270",
+      "y": 270
+    },
+    "direction=left,facing=north,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_0",
+      "y": 270
+    },
+    "direction=up,facing=north,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_0"
+    },
+    "direction=right,facing=north,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_90"
+    },
+    "direction=down,facing=north,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_180"
+    },
+    "direction=left,facing=north,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_270"
+    },
+    "direction=up,facing=north,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_90",
+      "y": 270
+    },
+    "direction=right,facing=north,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_180",
+      "y": 270
+    },
+    "direction=down,facing=north,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_270",
+      "y": 270
+    },
+    "direction=left,facing=north,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_0",
+      "y": 270
+    },
+    "direction=up,facing=north,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_0"
+    },
+    "direction=right,facing=north,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_90"
+    },
+    "direction=down,facing=north,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_180"
+    },
+    "direction=left,facing=north,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_270"
+    },
+    "direction=up,facing=north,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_90",
+      "y": 270
+    },
+    "direction=right,facing=north,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_180",
+      "y": 270
+    },
+    "direction=down,facing=north,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_270",
+      "y": 270
+    },
+    "direction=left,facing=north,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_0",
+      "y": 270
+    },
+    "direction=up,facing=south,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_180"
+    },
+    "direction=right,facing=south,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_270"
+    },
+    "direction=down,facing=south,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_0"
+    },
+    "direction=left,facing=south,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_90"
+    },
+    "direction=up,facing=south,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_90",
+      "y": 90
+    },
+    "direction=right,facing=south,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_180",
+      "y": 90
+    },
+    "direction=down,facing=south,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_270",
+      "y": 90
+    },
+    "direction=left,facing=south,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_0",
+      "y": 90
+    },
+    "direction=up,facing=south,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_180"
+    },
+    "direction=right,facing=south,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_270"
+    },
+    "direction=down,facing=south,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_0"
+    },
+    "direction=left,facing=south,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_90"
+    },
+    "direction=up,facing=south,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_90",
+      "y": 90
+    },
+    "direction=right,facing=south,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_180",
+      "y": 90
+    },
+    "direction=down,facing=south,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_270",
+      "y": 90
+    },
+    "direction=left,facing=south,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_0",
+      "y": 90
+    },
+    "direction=up,facing=south,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_90",
+      "y": 90
+    },
+    "direction=right,facing=south,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_180",
+      "y": 90
+    },
+    "direction=down,facing=south,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_270",
+      "y": 90
+    },
+    "direction=left,facing=south,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_0",
+      "y": 90
+    },
+    "direction=up,facing=south,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_90",
+      "y": 90
+    },
+    "direction=right,facing=south,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_180",
+      "y": 90
+    },
+    "direction=down,facing=south,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_270",
+      "y": 90
+    },
+    "direction=left,facing=south,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_0",
+      "y": 90
+    },
+    "direction=up,facing=south,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_0",
+      "y": 180
+    },
+    "direction=right,facing=south,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_90",
+      "y": 180
+    },
+    "direction=down,facing=south,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_180",
+      "y": 180
+    },
+    "direction=left,facing=south,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_270",
+      "y": 180
+    },
+    "direction=up,facing=south,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_90",
+      "y": 90
+    },
+    "direction=right,facing=south,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_180",
+      "y": 90
+    },
+    "direction=down,facing=south,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_270",
+      "y": 90
+    },
+    "direction=left,facing=south,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_0",
+      "y": 90
+    },
+    "direction=up,facing=south,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_0",
+      "y": 180
+    },
+    "direction=right,facing=south,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_90",
+      "y": 180
+    },
+    "direction=down,facing=south,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_180",
+      "y": 180
+    },
+    "direction=left,facing=south,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_270",
+      "y": 180
+    },
+    "direction=up,facing=south,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_90",
+      "y": 90
+    },
+    "direction=right,facing=south,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_180",
+      "y": 90
+    },
+    "direction=down,facing=south,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_270",
+      "y": 90
+    },
+    "direction=left,facing=south,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_0",
+      "y": 90
+    },
+    "direction=up,facing=west,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_180",
+      "y": 90
+    },
+    "direction=right,facing=west,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_270",
+      "y": 90
+    },
+    "direction=down,facing=west,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_0",
+      "y": 90
+    },
+    "direction=left,facing=west,half=bottom,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_90",
+      "y": 90
+    },
+    "direction=up,facing=west,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_90",
+      "y": 180
+    },
+    "direction=right,facing=west,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_180",
+      "y": 180
+    },
+    "direction=down,facing=west,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_270",
+      "y": 180
+    },
+    "direction=left,facing=west,half=bottom,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_bottom_0",
+      "y": 180
+    },
+    "direction=up,facing=west,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_180",
+      "y": 90
+    },
+    "direction=right,facing=west,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_270",
+      "y": 90
+    },
+    "direction=down,facing=west,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_0",
+      "y": 90
+    },
+    "direction=left,facing=west,half=bottom,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_90",
+      "y": 90
+    },
+    "direction=up,facing=west,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_90",
+      "y": 180
+    },
+    "direction=right,facing=west,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_180",
+      "y": 180
+    },
+    "direction=down,facing=west,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_270",
+      "y": 180
+    },
+    "direction=left,facing=west,half=bottom,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_bottom_0",
+      "y": 180
+    },
+    "direction=up,facing=west,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_90",
+      "y": 180
+    },
+    "direction=right,facing=west,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_180",
+      "y": 180
+    },
+    "direction=down,facing=west,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_270",
+      "y": 180
+    },
+    "direction=left,facing=west,half=bottom,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_bottom_0",
+      "y": 180
+    },
+    "direction=up,facing=west,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_90",
+      "y": 180
+    },
+    "direction=right,facing=west,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_180",
+      "y": 180
+    },
+    "direction=down,facing=west,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_270",
+      "y": 180
+    },
+    "direction=left,facing=west,half=top,shape=inner_left": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_0",
+      "y": 180
+    },
+    "direction=up,facing=west,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_0",
+      "y": 270
+    },
+    "direction=right,facing=west,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_90",
+      "y": 270
+    },
+    "direction=down,facing=west,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_180",
+      "y": 270
+    },
+    "direction=left,facing=west,half=top,shape=inner_right": {
+      "model": "ctrcraft:block/boost_stairs_inner_top_270",
+      "y": 270
+    },
+    "direction=up,facing=west,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_90",
+      "y": 180
+    },
+    "direction=right,facing=west,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_180",
+      "y": 180
+    },
+    "direction=down,facing=west,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_270",
+      "y": 180
+    },
+    "direction=left,facing=west,half=top,shape=outer_left": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_0",
+      "y": 180
+    },
+    "direction=up,facing=west,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_0",
+      "y": 270
+    },
+    "direction=right,facing=west,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_90",
+      "y": 270
+    },
+    "direction=down,facing=west,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_180",
+      "y": 270
+    },
+    "direction=left,facing=west,half=top,shape=outer_right": {
+      "model": "ctrcraft:block/boost_stairs_outer_top_270",
+      "y": 270
+    },
+    "direction=up,facing=west,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_90",
+      "y": 180
+    },
+    "direction=right,facing=west,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_180",
+      "y": 180
+    },
+    "direction=down,facing=west,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_270",
+      "y": 180
+    },
+    "direction=left,facing=west,half=top,shape=straight": {
+      "model": "ctrcraft:block/boost_stairs_straight_top_0",
+      "y": 180
+    }
+  }
+}

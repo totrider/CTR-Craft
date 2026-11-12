@@ -1,0 +1,72 @@
+{
+  "engine_loop": {
+    "sounds": [
+      "ctrcraft:engine_loop"
+    ]
+  },
+  "skid_loop": {
+    "sounds": [
+      "ctrcraft:skid_loop"
+    ]
+  },
+  "turbo_loop": {
+    "sounds": [
+      "ctrcraft:turbo_loop"
+    ]
+  },
+  "hop": {
+    "sounds": [
+      "ctrcraft:hop"
+    ]
+  },
+  "land": {
+    "sounds": [
+      "ctrcraft:land"
+    ]
+  },
+  "drift_start": {
+    "sounds": [
+      "ctrcraft:drift_start"
+    ]
+  },
+  "boost": {
+    "sounds": [
+      "ctrcraft:boost"
+    ]
+  },
+  "boost_fail": {
+    "sounds": [
+      "ctrcraft:boost_fail"
+    ]
+  },
+  "meter_red": {
+    "sounds": [
+      "ctrcraft:meter_red"
+    ]
+  },
+  "meter_full": {
+    "sounds": [
+      "ctrcraft:meter_full"
+    ]
+  },
+  "hang_time": {
+    "sounds": [
+      "ctrcraft:hang_time"
+    ]
+  },
+  "wall_hit": {
+    "sounds": [
+      "ctrcraft:wall_hit"
+    ]
+  },
+  "slam": {
+    "sounds": [
+      "ctrcraft:slam"
+    ]
+  },
+  "spin_out": {
+    "sounds": [
+      "ctrcraft:spin_out"
+    ]
+  }
+}

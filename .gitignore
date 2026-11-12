@@ -1,0 +1,58 @@
+### Gradle ###
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/**/build/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/**/out/
+
+.run/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.eclipse/
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/**/bin/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Minecraft Modding ###
+run/
+!**/src/**/run/
+**/src/generated/**/.cache/
+repo/
+!**/src/**/repo/
+
+### CTR Craft ###
+# local tool config with absolute paths
+.mcp.json
+# Krita backup/autosave files
+*.kra~
+.*-autosave.kra
+# third-party jars are fetched by Gradle, never committed
+libs/*.jar
+# reference checkouts of other projects (ctr-native, world-of-kartcraft, sable); see docs/RESEARCH.md
+reference/
+
+# the user's own game image and anything extracted from it: never committed or shipped
+CTR - Crash Team Racing*/
+*.bin
+*.cue
+*.iso
+local-assets/

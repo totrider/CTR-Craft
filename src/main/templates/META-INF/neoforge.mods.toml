@@ -1,0 +1,45 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+description='''
+Crash Team Racing kart physics in Minecraft: drivable karts on smoothed block terrain, built to work with Sable, Create and Create Aeronautics.
+'''
+
+[[mixins]]
+config="${mod_id}.mixins.json"
+
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="[${neo_version},)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
+
+# Sable is a soft dependency (karts must also work without it). Declared optional so load order is right when present.
+[[dependencies.${mod_id}]]
+    modId="sable"
+    type="optional"
+    versionRange="[2.0.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# Fusion (connected textures) is optional: with it, boost blocks of the same state join up (fusion-overrides/ in the jar);
+# without it, the plain textures are used.
+[[dependencies.${mod_id}]]
+    modId="fusion"
+    type="optional"
+    versionRange="[1.0.0,)"
+    ordering="NONE"
+    side="CLIENT"

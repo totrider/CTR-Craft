@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "ctrcraft:boost_block",
+    "ctrcraft:boost_slab",
+    "ctrcraft:boost_stairs"
+  ]
+}

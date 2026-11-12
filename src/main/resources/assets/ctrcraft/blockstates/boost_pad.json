@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "ctrcraft:block/boost_pad"
+    },
+    "facing=east": {
+      "model": "ctrcraft:block/boost_pad",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "ctrcraft:block/boost_pad",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "ctrcraft:block/boost_pad",
+      "y": 270
+    }
+  }
+}
