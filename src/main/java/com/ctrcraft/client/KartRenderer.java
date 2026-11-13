@@ -4,6 +4,7 @@ import com.ctrcraft.CtrCraftMod;
 import com.ctrcraft.kart.KartEntity;
 import com.ctrcraft.kart.KartFlags;
 import com.ctrcraft.kart.KartScale;
+import com.ctrcraft.physics.AirTilt;
 import com.ctrcraft.physics.Wheelie;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -95,13 +96,37 @@ public class KartRenderer extends EntityRenderer<KartEntity> {
     }
 
     /**
-     * Turns the pose stack the way the kart's body is turned (the lean onto the ground and, after an explosion, the tumble), about the kart's own origin, for something that
+     * The jump pose of the kart's model (kart frame: x to its right, +z ahead, the model's front is -z, so the forward shift and the pitch flip, as the wheelie's do; a rotation about
+     * the length axis, the roll, keeps its sense when z is flipped, and a yaw flips): a shift, then the three rotations the game's matrix holds, about the kart's own middle.
+     */
+    private static void applyAirTilt(PoseStack pose, AirTilt.Pose air) {
+        pose.translate(air.x(), air.lift(), -air.forward());
+        // seen in the original's footage (rear and front): the kart leans forward and to its LEFT, so the table's signs are taken the other way round from the wheelie's
+        pose.mulPose(Axis.ZP.rotationDegrees((float) -air.rollDegrees()));
+        pose.mulPose(Axis.YP.rotationDegrees((float) air.yawDegrees()));
+        pose.mulPose(Axis.XP.rotationDegrees((float) air.pitchDegrees()));
+    }
+
+    /**
+     * What the drive animation does to the driver at full lock, measured from its frames (tools/inspect_ctr_kart.py, Crash): the torso turns 19 degrees, the head 36, and the
+     * head moves 23 units (0.21 of a crate) sideways and drops 6 about the waist, which is a lean of about 30 degrees; the legs and the kart do not move. The lean here is 20:
+     * a Minecraft rider is much taller against the kart than the original's driver, and 30 swings the head too far.
+     */
+    public static final float BODY_TWIST = 19.0F;
+    public static final float HEAD_TWIST = 36.0F;
+    public static final float LEAN = 20.0F;
+
+    /**
+     * Turns the pose stack the way the kart's body is turned (the lean onto the ground, the boost wheelie and, after an explosion, the tumble), about the kart's own origin, for something that
      * is drawn at {@code offset} from it: the rider. The pose stack is in the world's axes at the rider's position; {@code offset} is the kart's position minus the rider's.
      */
     public static void applyBodyTurn(PoseStack pose, KartEntity kart, double ox, double oy, double oz, float partialTick) {
         int tumble = KartFlags.tumble(kart.getVisualFlags());
         int tilt = kart.getTilt();
-        if (tumble == 0 && tilt == KartEntity.TILT_FLAT) return;
+        Wheelie.Pose wheelie = Wheelie.pose(KartFlags.wheelie(kart.getVisualFlags()), KartScale.LU_PER_BLOCK);
+        AirTilt.Pose air = AirTilt.pose(KartFlags.airTilt(kart.getVisualFlags()), AirTilt.DEFAULT_CHARACTER, KartScale.LU_PER_BLOCK);
+        if (air != null) wheelie = null;               // one baked pose at a time: the jump's replaces the wheelie's
+        if (tumble == 0 && tilt == KartEntity.TILT_FLAT && wheelie == null && air == null) return;
         float theta = 180.0F - kart.renderYawDegrees(partialTick);
         pose.translate(ox, oy, oz);
         pose.mulPose(Axis.YP.rotationDegrees(theta));
@@ -113,6 +138,14 @@ public class KartRenderer extends EntityRenderer<KartEntity> {
             double sn = Math.sin(Math.toRadians(theta));
             pose.mulPose(new Quaternionf().rotationTo(new Vector3f(0.0F, 1.0F, 0.0F), new Vector3f((float) (nx * c - nz * sn), (float) ny, (float) (nx * sn + nz * c))));
         }
+        // the boost wheelie, as the kart's own model gets it (render): the rider is part of the kart, so it lifts, shifts, rears up and squashes with it
+        if (wheelie != null) {
+            pose.translate(0.0, wheelie.lift(), -wheelie.forward());
+            pose.mulPose(Axis.XP.rotationDegrees((float) -wheelie.pitchDegrees()));
+            pose.scale((float) wheelie.sx(), (float) wheelie.sy(), (float) wheelie.sz());
+        }
+        // the jump's pose moves the kart, not the driver: he is lifted and shifted with it but stays upright (the original's footage)
+        if (air != null) pose.translate(air.x(), air.lift(), -air.forward());
         if (tumble != 0) {
             int f = tumble & 63;
             double swing = Math.sin(2.0 * Math.PI * 3.0 * f / 27.0);
@@ -148,6 +181,11 @@ public class KartRenderer extends EntityRenderer<KartEntity> {
         // the boost wheelie: lift, forward shift, nose-up pitch and squash/stretch from CTR's own pose tables (kart frame: +z ahead,
         // the model's front is -z, so the forward shift and the pitch flip)
         Wheelie.Pose w = Wheelie.pose(KartFlags.wheelie(entity.getVisualFlags()), KartScale.LU_PER_BLOCK);
+        AirTilt.Pose air = AirTilt.pose(KartFlags.airTilt(entity.getVisualFlags()), AirTilt.DEFAULT_CHARACTER, KartScale.LU_PER_BLOCK);
+        if (air != null) {
+            w = null;                                  // one baked pose at a time: the jump's replaces the wheelie's
+            applyAirTilt(pose, air);
+        }
         if (w != null) {
             pose.translate(0.0, w.lift(), -w.forward());
             pose.mulPose(Axis.XP.rotationDegrees((float) -w.pitchDegrees()));

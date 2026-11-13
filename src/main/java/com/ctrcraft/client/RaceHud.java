@@ -25,6 +25,13 @@ import net.minecraft.resources.ResourceLocation;
  * counter, which the original puts top right, sits at the right edge above the driving meters, where the original shows its map.
  */
 public final class RaceHud {
+    /** Racers whose portrait is red until this time (ms): hurt by a spin or a blast, 0x1e frames of 30 Hz. */
+    private static final java.util.Map<UUID, Long> FLASH = new java.util.HashMap<>();
+
+    public static void flash(UUID racer) {
+        FLASH.put(racer, System.currentTimeMillis() + 1000L);
+    }
+
     private RaceHud() {}
 
     private static final int ORANGE = 0xFFFF8A1F;
@@ -182,6 +189,8 @@ public final class RaceHud {
             PlayerInfo info = mc.getConnection() == null ? null : mc.getConnection().getPlayerInfo(id);
             PlayerSkin skin = info != null ? info.getSkin() : DefaultPlayerSkin.get(id);
             PlayerFaceRenderer.draw(g, skin, sc.x(20), top, head);
+            Long until = FLASH.get(id);
+            if (until != null && System.currentTimeMillis() < until) g.fill(sc.x(20), top, sc.x(20) + head, top + head, 0x90FF1010);      // damageColorTimer: the icon drawn red
             text(g, mc, Integer.toString(i + 1), 20 + (head + 6) / sc.sx(), 56 + 27 * i, false, sc, WHITE);
         }
 

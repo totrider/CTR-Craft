@@ -1,5 +1,5 @@
 # Builds Craft Team Racing and copies the jar into the ATLauncher test instance.
-# Run it from anywhere:  powershell -ExecutionPolicy Bypass -File "H:\CTR Craft\build-and-install.ps1"
+# Run it from anywhere:  powershell -ExecutionPolicy Bypass -File "H:\Craft Team Racing\build-and-install.ps1"
 # (or just double-click build-and-install.bat)
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,11 @@ if (Get-Command python -ErrorAction SilentlyContinue) {
     cmd /c "python tools\make_pickup_spots.py 2>&1"
     cmd /c "python tools\make_kart_fx.py 2>&1"
     cmd /c "python tools\make_pickup_models.py 2>&1"
+    cmd /c "python tools\make_beaker_models.py 2>&1"
     cmd /c "python tools\make_power_icons.py 2>&1"
+    cmd /c "python tools\make_bomb_sprites.py 2>&1"
+    cmd /c "python tools\make_burst_sprites.py 2>&1"
+    cmd /c "python tools\make_crate_break.py 2>&1"
     cmd /c "python tools\make_track_overlays.py 2>&1"
     cmd /c "python tools\make_sounds.py 2>&1"
 }

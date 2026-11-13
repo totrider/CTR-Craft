@@ -350,7 +350,7 @@ public final class KartDriver {
 
     private static int engineData() {
         int[] e = sim.engineSound();
-        return (e[0] & 0xFF) | ((e[1] & 0xFF) << 8);
+        return (e[0] & 0xFF) | ((e[1] & 0xFF) << 8) | ((sim.steerCode() & 31) << 16);
     }
 
     /** The kart's smoothed ground normal (what it leans on) as two bytes: x and z, value = n * 127 + 127. */
@@ -438,7 +438,7 @@ public final class KartDriver {
         Minecraft mc = Minecraft.getInstance();
         while (CtrCraftClient.KEY_ITEM.consumeClick()) {
             if (mc.player != null && mc.player.getVehicle() instanceof KartEntity) {
-                PacketDistributor.sendToServer(new com.ctrcraft.pickup.UseItemPayload(mc.options.keyUp.isDown()));
+                PacketDistributor.sendToServer(new com.ctrcraft.pickup.UseItemPayload(mc.options.keyUp.isDown(), mc.options.keyDown.isDown()));
             }
         }
         // leaving a race: the key held for two seconds

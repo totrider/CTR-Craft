@@ -241,6 +241,16 @@ public final class KartSim {
 
     private int wheelieKind = WHEELIE_NONE;
     private int wheelieIndex;
+    /** The airborne pose animation (VehFrameProc_Driving): whether it plays, and its frame (0 to 3). */
+    private boolean airTiltOn;
+    private int airTiltFrame;
+    /**
+     * The drive animation's steering frame as a number from -1 (full left) to +1 (full right): the game maps the stick (simpTurnState, over the class's turn rate) onto the animation's
+     * frames and moves the shown frame one step a frame towards it (VehCalc_InterpBySpeed, speed 1). The animation has 21 frames (counted in the racers' models,
+     * tools/inspect_ctr_kart.py), so a step is 1/10 of the way from straight to a lock.
+     */
+    private double steerAnim;
+    private static final double STEER_ANIM_STEP = 2.0 / 20.0;
     private int enginePitch;
     private int engineVolume;
     private int engineWhine;
@@ -320,6 +330,51 @@ public final class KartSim {
         if (all || (flags & BACK_SKID) != 0) out |= 1;
         if (all || (flags & FRONT_SKID) != 0) out |= 2;
         return out;
+    }
+
+    /** The steering frame as a number for the wire: 0 when unset, else 1 (full left) to 29 (full right), 15 straight. */
+    public int steerCode() {
+        return 15 + (int) Math.round(steerAnim * 14.0);
+    }
+
+    /** The shown steering of the driver, -1 left to +1 right. */
+    public double steerAnim() {
+        return steerAnim;
+    }
+
+    private void steerTick() {
+        double target = 0.0;
+        if (state == State.NORMAL || state == State.DRIFTING) {
+            target = Math.max(-1.0, Math.min(1.0, -(double) simpTurn / Math.max(1, kartClass.turnRate)));
+        }
+        if (steerAnim < target) steerAnim = Math.min(steerAnim + STEER_ANIM_STEP, target);
+        else if (steerAnim > target) steerAnim = Math.max(steerAnim - STEER_ANIM_STEP, target);
+    }
+
+    /** The airborne pose's frame as one number for the wire (see {@link AirTilt}): 0 none, 1 to 4 the pose. */
+    public int airTiltCode() {
+        return airTiltOn ? 1 + airTiltFrame : 0;
+    }
+
+    /**
+     * VehFrameProc_Driving, the airborne branch (VehFrame.c:100-186): a kart that is more than 128 level units above the ground and is rising faster than 0x600 (or already plays
+     * it) strikes the jump pose, one frame a frame up to the last; when that ends the frame falls back two a frame to the first. Only while driving: a spinning, crashing or
+     * blasted kart has its own animation.
+     */
+    private void airTiltTick() {
+        boolean driving = (state == State.NORMAL || state == State.DRIFTING) && tumbleMs <= 0;
+        boolean want = driving && (vel.y > AirTilt.JUMP_AIR_THRESHOLD || airTiltOn) && pos.y - groundHeight > AirTilt.AIR_GAP;
+        if (want) {
+            if (!airTiltOn) {
+                airTiltOn = true;
+                airTiltFrame = 0;
+            } else {
+                airTiltFrame = Math.min(airTiltFrame + 1, AirTilt.FRAMES - 1);
+            }
+        } else if (airTiltOn) {
+            airTiltFrame = Math.max(airTiltFrame - 2, 0);
+            if (airTiltFrame == 0) airTiltOn = false;
+        }
     }
 
     /** The boost wheelie's frame as one number for the wire (see {@link Wheelie}): 0 none, 1-11 rise, 12 hold, 13-21 down. */
@@ -539,6 +594,8 @@ public final class KartSim {
             stateTimer -= 1;
         }
         wheelieTick();
+        airTiltTick();
+        steerTick();
         flameTick();
         padPrev = onPad;
         onPad = false;

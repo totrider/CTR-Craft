@@ -19,6 +19,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityMountEvent;
@@ -103,6 +104,8 @@ public final class ItemManager {
         s.effect = effect;
         s.effectSeq++;
         sync(p, s);
+        // RB_Hazard_HurtDriver sets damageColorTimer: every racer's HUD portrait of this driver flashes red
+        if (effect == EFFECT_SPIN || effect == EFFECT_BLAST) PacketDistributor.sendToAllPlayers(new HitFlashPayload(p.getUUID()));
     }
 
     /** What a kart carries. {@code wumpa} and {@code held} are saved with the kart; the rest is the roulette and the effect in progress. */
@@ -116,9 +119,12 @@ public final class ItemManager {
         int cloudTicks;
         int cloudPending;
         int cloudDelay;
+        /** The bomb this kart's driver last fired, while it may still be rolling (the use key detonates it). */
+        UUID bomb;
 
         void clear() {
             cloudTicks = 0;
+            bomb = null;
             wumpa = 0;
             held = "";
             roll = 0;
@@ -184,9 +190,19 @@ public final class ItemManager {
     }
 
     /** The use key. */
-    public static void use(ServerPlayer p, boolean forward) {
+    public static void use(ServerPlayer p, boolean forward, boolean back) {
         State s = state(p);
-        if (s == null || s.held.isEmpty() || s.roll > 0) return;
+        if (s == null) return;
+        // a bomb of this driver is still rolling: the key detonates it (VehPhysProc: instBombThrow, tw->flags |= 2), before anything else the key does
+        if (s.bomb != null) {
+            Entity rolling = p.serverLevel().getEntity(s.bomb);
+            s.bomb = null;
+            if (rolling instanceof BombEntity bomb && !bomb.isRemoved()) {
+                bomb.detonate();
+                return;
+            }
+        }
+        if (s.held.isEmpty() || s.roll > 0) return;
         if (s.held.equals(HeldItem.TURBO.id())) {
             // VehPickupItem_ShootNow: VehFire_Increment(0x960, ..., 0x80), 0x100 with ten wumpa
             s.effect = s.wumpa >= JUICED ? EFFECT_TURBO_JUICED : EFFECT_TURBO;
@@ -210,6 +226,19 @@ public final class ItemManager {
                 }
                 p.serverLevel().addFreshEntity(potion);
                 p.serverLevel().playSound(null, p.blockPosition(), ModSounds.MINE_DROP.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+            }
+            s.held = "";
+            sync(p, s);
+        } else if (s.held.equals(HeldItem.BOMB.id())) {
+            // VehPickupItem_ShootNow, WEAPON_ID_BOMB_MISSILE: rolls forward, or backward (back key held, 0.3 of the speed); bigger blast with ten wumpa
+            if (!BombEntity.canLaunch()) return;          // ACTIVE_MISSILE_LIMIT: the item is kept
+            KartEntity kart = (KartEntity) p.getVehicle();
+            BombEntity bomb = com.ctrcraft.ModEntities.BOMB.get().create(p.serverLevel());
+            if (bomb != null) {
+                bomb.launch(p, kart, s.wumpa >= JUICED, back);
+                p.serverLevel().addFreshEntity(bomb);
+                s.bomb = bomb.getUUID();
+                p.serverLevel().playSound(null, p.blockPosition(), ModSounds.BOMB_LAUNCH.get(), SoundSource.PLAYERS, 3.5F, 1.0F);       // SOUND_BOMB_LAUNCH 0x47
             }
             s.held = "";
             sync(p, s);

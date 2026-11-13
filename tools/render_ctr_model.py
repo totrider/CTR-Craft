@@ -24,8 +24,18 @@ import extract_ctr_sounds as sounds  # noqa: E402
 class Prepared:
     """A model's triangles with their texture pictures, ready to be drawn from any side."""
 
-    def __init__(self, vram, model, frame=0):
+    def __init__(self, vram, model, frame=0, up=2):
+        """{up} is the coordinate the model's height is in: the level file's models have it in the third (what render_view draws as up), the shared model pack's (the weapons,
+        the crates, the characters) in the second, so a pack model is turned a quarter about x, (x, y, z) -> (x, -z, y), which keeps its handedness: its top is then the
+        view from above and its roll axis is still x."""
         self.verts = np.array(ct.mesh_vertices(model, frame), dtype=np.float64)
+        self.mirror = True
+        if up == 1:
+            # The pack's models have their height in the second coordinate: a quarter turn about x, (x, y, z) -> (x, -z, y), puts it up, and render_view's own mirror (the game's
+            # frame is left handed) is kept. Checked on two things that cannot be wrong together: the TNT crate's lettering reads the right way round on its sides, and the
+            # bomb, which moves towards its model's -z, shows its spark (+x) on the LEFT from behind, as in the original's footage. Yaw 0 is the camera at +z of the model, which is
+            # BEHIND something that travels towards -z.
+            self.verts = np.stack([self.verts[:, 0], -self.verts[:, 2], self.verts[:, 1]], axis=1)
         self.tris = ct.mesh_triangles(model)
         table = ct.colour_table(model)
         self.table = table
@@ -52,7 +62,8 @@ def render_view(p, yaw_deg, pitch_deg, size, margin=0.04, fit_bbox=False):
     x1 = v[:, 0] * cy - v[:, 1] * sy
     y1 = v[:, 0] * sy + v[:, 1] * cy
     z1 = v[:, 2]
-    x1 = -x1                               # the game's axes run the other way round: without this the pictures are mirrored
+    if getattr(p, "mirror", True):
+        x1 = -x1                           # the level models' axes run the other way round: without this the pictures are mirrored
     up = z1 * cp - y1 * sp
     depth = y1 * cp + z1 * sp            # towards the viewer is smaller
     if fit_bbox:
@@ -113,6 +124,26 @@ def contact_sheet(p, size=96, yaws=8, pitch=20.0):
     for i in range(yaws):
         sheet.alpha_composite(render_view(p, 360.0 * i / yaws, pitch, size), (i * size, 0))
     return sheet
+
+
+def roll_atlas(p, size=64, frames=32, azimuths=8, pitch=20.0, phase=270.0):
+    """A rolling model as an atlas of {azimuths} columns (the camera's side) by {frames} rows (one full turn about the model's own x axis, the axle: the game's bomb rolls
+    with dir.x += 0x200 a frame) of pictures {size} px square. {p} must be a pack model made with up=1 (Prepared turns it so its height is up; the bomb travels towards
+    its model's -z): column 0 (yaw 0) sees it from BEHIND, which is what a chase camera sees of a bomb going away, column 4 from the front; column k is seen with render_view's yaw 360 * k / {azimuths}. The pitch is from above (up is the model's own height). Checked against the original's
+    footage: at {phase} degrees from behind the skull faces the camera and the spark is at the top left, which is how the footage shows a fired bomb, and row 0 is that. The centre is the model's origin (the bomb's body), so the body stays put and the fuse swings round it; one scale for every picture."""
+    import copy
+    q = copy.copy(p)
+    q.centre = np.zeros(3)
+    q.radius = float(np.linalg.norm(p.verts, axis=1).max()) or 1.0
+    atlas = Image.new("RGBA", (size * azimuths, size * frames), (0, 0, 0, 0))
+    for i in range(frames):
+        a = math.radians(phase + 360.0 * i / frames)
+        c, s = math.cos(a), math.sin(a)
+        v = p.verts
+        q.verts = np.stack([v[:, 0], v[:, 1] * c - v[:, 2] * s, v[:, 1] * s + v[:, 2] * c], axis=1)
+        for k in range(azimuths):
+            atlas.alpha_composite(render_view(q, 360.0 * k / azimuths, pitch, size, margin=0.02), (k * size, i * size))
+    return atlas
 
 
 def main():

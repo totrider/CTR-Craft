@@ -37,6 +37,8 @@ public class CtrCraftMod {
         registrar.playToServer(KartDismountPayload.TYPE, KartDismountPayload.STREAM_CODEC, KartDismountPayload::handle);
         registrar.playToClient(com.ctrcraft.pickup.ItemStatePayload.TYPE, com.ctrcraft.pickup.ItemStatePayload.STREAM_CODEC,
                 com.ctrcraft.pickup.ItemStatePayload::handle);
+        registrar.playToClient(com.ctrcraft.pickup.HitFlashPayload.TYPE, com.ctrcraft.pickup.HitFlashPayload.STREAM_CODEC,
+                com.ctrcraft.pickup.HitFlashPayload::handle);
         registrar.playToServer(com.ctrcraft.pickup.UseItemPayload.TYPE, com.ctrcraft.pickup.UseItemPayload.STREAM_CODEC,
                 com.ctrcraft.pickup.UseItemPayload::handle);
         registrar.playToServer(com.ctrcraft.net.KartHitPayload.TYPE, com.ctrcraft.net.KartHitPayload.STREAM_CODEC,

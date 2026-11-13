@@ -130,7 +130,7 @@
  ],
  "textures": [
   {
-   "path": "H:\\CTR Craft\\src\\main\\resources\\assets\\ctrcraft\\textures\\item\\pickups.png",
+   "path": "H:\\Craft Team Racing\\src\\main\\resources\\assets\\ctrcraft\\textures\\item\\pickups.png",
    "name": "pickups.png",
    "folder": "",
    "namespace": "",

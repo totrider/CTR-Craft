@@ -4,7 +4,7 @@ import com.ctrcraft.physics.KartSim;
 
 /**
  * What other players (and the particle and sound code) need to know about a kart, packed in one int that the driver's client sends
- * and the entity syncs: effect bits, the wheelie frame (5 bits) and the turbo flame size (4 bits).
+ * and the entity syncs: effect bits, the wheelie frame (5 bits), the turbo flame size (4 bits), the tumble (7 bits) and the airborne pose (3 bits).
  */
 public final class KartFlags {
     private KartFlags() {}
@@ -19,7 +19,7 @@ public final class KartFlags {
     /** Burning past the sacred fire cap: only a super turbo pad does that in CTR, and we have none yet. */
     public static final int ULTRA = 128;
     /** The bits a client may set (anything else is dropped by the server). */
-    public static final int MASK = 0x7FFFFFF;
+    public static final int MASK = 0x3FFFFFFF;
 
     public static int encode(KartSim sim) {
         int f = 0;
@@ -36,11 +36,17 @@ public final class KartFlags {
         f |= (sim.flameFade() & 7) << 17;
         if (sim.ultraFire()) f |= ULTRA;
         f |= (sim.tumbleCode() & 127) << 20;
+        f |= (sim.airTiltCode() & 7) << 27;
         return f;
     }
 
     public static int wheelie(int flags) {
         return (flags >> 8) & 31;
+    }
+
+    /** The airborne pose: 0 none, 1 to 4 (see {@link com.ctrcraft.physics.AirTilt}). */
+    public static int airTilt(int flags) {
+        return (flags >> 27) & 7;
     }
 
     public static int fireSize(int flags) {

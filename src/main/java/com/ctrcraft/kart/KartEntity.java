@@ -71,6 +71,12 @@ public class KartEntity extends Entity {
         entityData.set(DATA_TILT, tilt);
     }
 
+    /** The driver's steering as the animation shows it, -1 left to +1 right (bits 16-20 of the engine word: 0 unset, 1 to 29, 15 straight). */
+    public float steer() {
+        int code = (getEngineData() >> 16) & 31;
+        return code == 0 ? 0.0F : (code - 15) / 14.0F;
+    }
+
     public int getEngineData() {
         return entityData.get(DATA_ENGINE);
     }

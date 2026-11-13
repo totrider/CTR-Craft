@@ -3,14 +3,17 @@ Export models from YOUR OWN CTR disc image as Wavefront OBJ files (with UVs, mat
 mod's own models.
 
   python tools/export_ctr_mesh.py                          (the crates and the Wumpa fruit of Crash Cove's level file)
-  python tools/export_ctr_mesh.py --models crate_question crate_fruit fruit --scale 0.02
+  python tools/export_ctr_mesh.py --models crate_question crate_fruit fruit --scale 0.02     (the old scale: 50 units a block)
 
 Writes local-assets/ctr-mesh/<model>/<model>.obj, <model>.mtl, tex_<n>.png and triangles.txt (git-ignored, this machine only: the art is Sony / Naughty
 Dog's, never commit or share it).
 
 In Blender: File > Import > Wavefront (.obj). The import settings' forward / up axes are Blender's defaults (-Z forward, Y up), which fit the file.
-  * Axes: the model is turned so +Y is up (the game's up is its third coordinate); the raw coordinates are in triangles.txt.
-  * Units: the file is in the game's level units times --scale. The default 0.02 is one block per 50 units, the mod's scale (a crate comes out 2.18 wide).
+  * Axes: the model is turned so +Y is up (a level file's models have it in the third coordinate, the shared model pack's, with --pack, in the second); the raw coordinates are in
+    triangles.txt.
+  * Units: the file is in the game's level units times --scale. The default is 1 / 108.8, the scale the mod's crates and its pack models have (a crate is 109 units: exactly
+    1.00 wide, one block), so everything here is in the size it has in the game beside a crate (the beaker comes out 0.87 tall, the Wumpa fruit 0.6). The weapons' own
+    entities (the bomb's roll, shots) use 50 units a block: --scale 0.02 for those.
   * UVs: every triangle's corner uses the corner of its texture's layout exactly as the game draws it; each texture index of the model is one material
     (tex_<n>.png is that layout's rectangle of the texture page with its palette applied). A texel of 0x0000 is transparent. Faces are not smoothed.
   * Vertex colours: the game shades a model with a colour table (the crates have five greys, 128 = unchanged, so brighter and darker faces); the OBJ carries
@@ -28,10 +31,15 @@ import ctr_disc_textures as ct  # noqa: E402
 import extract_ctr_sounds as sounds  # noqa: E402
 from PIL import Image  # noqa: E402
 
+# pack models whose height is the THIRD coordinate (the crate's break-up: its pieces fly up along it), like a level file's
+HEIGHT_THIRD = ("crate_explosion",)
 
-def export(vram, name, model, out_dir, scale, frame=0):
+
+def export(vram, name, model, out_dir, scale, frame=0, up=2):
     os.makedirs(out_dir, exist_ok=True)
     verts = ct.mesh_vertices(model, frame)
+    if up == 1:
+        verts = [(-v[0], v[1], v[2]) for v in verts]          # the game's frame is left handed, Blender's is right handed: x is flipped (the winding is worked out afterwards)
     tris = ct.mesh_triangles(model)
     table = ct.colour_table(model)
     cx = sum(v[0] for v in verts) / len(verts)
@@ -80,15 +88,17 @@ def export(vram, name, model, out_dir, scale, frame=0):
             order = [0, 2, 1]
             nx, ny, nz = -nx, -ny, -nz
         ln = (nx * nx + ny * ny + nz * nz) ** 0.5 or 1.0
-        vn_lines.append("vn %.5f %.5f %.5f" % (nx / ln, nz / ln, -ny / ln))
+        vn_lines.append("vn %.5f %.5f %.5f" % ((nx / ln, nz / ln, -ny / ln) if up == 2 else (nx / ln, ny / ln, nz / ln)))
         shade = (1.0, 1.0, 1.0)
         if table and col < len(table):
             shade = tuple(min(1.0, c / 128.0) for c in table[col])
         idx = []
         for k in order:
             p = pts[k]
-            # the game's up is the third coordinate: turn the model so +Y is up (a plain rotation about X, nothing mirrored): (x, y, z) -> (x, z, -y)
-            lines.append("v %.5f %.5f %.5f %.3f %.3f %.3f" % ((p[0] * scale, p[2] * scale, -p[1] * scale) + shade))
+            # the level file's models have their up in the third coordinate: turn the model so +Y is up (a plain rotation about X, nothing mirrored): (x, y, z) -> (x, z, -y);
+            # the shared model pack's have it in the second, which is +Y already
+            xyz = (p[0] * scale, p[2] * scale, -p[1] * scale) if up == 2 else (p[0] * scale, p[1] * scale, p[2] * scale)
+            lines.append("v %.5f %.5f %.5f %.3f %.3f %.3f" % (xyz + shade))
             vt_lines.append("vt %.5f %.5f" % uvs[k])
             idx.append(len(lines))
         n_out += 1
@@ -124,7 +134,7 @@ def main():
     ap.add_argument("--models", nargs="*", default=None, help="model names (or 'all'); default: the crates and the fruit of Crash Cove's level file, or the weapons with --pack")
     ap.add_argument("--pack", action="store_true", help="take the models from the shared model pack (the weapons: beakers, bomb, warp orb, cloud, shield, shockwaves, the TNT / Nitro crates) instead of Crash Cove")
     ap.add_argument("--frame", type=int, default=0, help="for an animated model (the fruit's 'spin'): which frame")
-    ap.add_argument("--scale", type=float, default=0.02, help="units to Blender metres: 0.02 = one block per 50 level units")
+    ap.add_argument("--scale", type=float, default=1.0 / 108.8, help="units to Blender metres: the default is one block per 108.8 level units (a crate is 1 m); 0.02 = one block per 50")
     args = ap.parse_args()
     disc_path = args.disc or sounds.find_disc(project)
     if not disc_path or not os.path.exists(disc_path):
@@ -147,7 +157,7 @@ def main():
             print("no model %r (the level has: %s)" % (name, ", ".join(models)))
             continue
         try:
-            v, t, m = export(vram, name, models[name], os.path.join(args.out, name), args.scale, args.frame)
+            v, t, m = export(vram, name, models[name], os.path.join(args.out, name), args.scale, args.frame, 1 if args.pack and name not in HEIGHT_THIRD else 2)
         except ValueError as e:
             print("%-16s skipped: %s" % (name, e))
             continue

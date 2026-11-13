@@ -32,6 +32,12 @@ public final class TerrainField {
     private static final double HEADROOM = 0.9;
     /** A box counts as a wall when it stands this much above the ground surface at its closest point (blocks). */
     private static final double WALL_RISE = 0.5;
+    /**
+     * How far (blocks) the surface a bomb or kart rides can be under the real top of what it rides over: the smoothing and the half-block sampling put it up to this much below
+     * a steep slope's crest. A window built around the ride height alone then ends up to this much short of the step up it is supposed to reach, so a block that follows the crest
+     * is a wall. Prepare the window around {@code ride + RIDE_LAG} and look for walls above {@code ride + RIDE_LAG + STEP_UP}.
+     */
+    public static final double RIDE_LAG = 0.5;
     /** Steepest ramp: 1 up per 1 across (45 degrees). */
     private static final double SLOPE = 1.0;
     private static final double GRADIENT_STEP = 0.25;
@@ -304,7 +310,46 @@ public final class TerrainField {
                 best = new double[] { r - d, n[0], n[1], n[2], qx, s, qz };
             }
         }
-        // the walls: collision boxes the ground does not cover
+        double[] wall = deepestWall(cx, cy, cz, r);
+        if (wall != null && (best == null || wall[0] > best[0])) {
+            best = wall;
+        }
+        return best;
+    }
+
+    /**
+     * Whether a collision box of the prepared window stands in the volume {@code half} either side of (cx, cz) between heights y0 and y1: for something rolling along the ground
+     * surface, a wall. Put the volume a little above where the surface is under it (0.6 to 0.9 above, for a 0.7 block tall body): a step, stair or ramp rises less than that
+     * under the body's front edge, because the surface already climbs ahead of it (the cone), so only what the ground does not cover is in the way.
+     */
+    public boolean blocked(double cx, double cz, double y0, double y1, double half) {
+        return blockingBox(cx, cz, y0, y1, half) != null;
+    }
+
+    /** The first collision box {@link #blocked} found (x0, y0, z0, x1, y1, z1), or null. */
+    public double[] blockingBox(double cx, double cz, double y0, double y1, double half) {
+        int i0 = (int) Math.floor(cx - half) - bx0;
+        int i1 = (int) Math.floor(cx + half) - bx0;
+        int j0 = (int) Math.floor(cz - half) - bz0;
+        int j1 = (int) Math.floor(cz + half) - bz0;
+        for (int i = Math.max(i0, 0); i <= Math.min(i1, columns - 1); i++) {
+            for (int j = Math.max(j0, 0); j <= Math.min(j1, columns - 1); j++) {
+                for (double[] b : boxesByColumn[i * columns + j]) {
+                    if (b[0] < cx + half && b[3] > cx - half && b[2] < cz + half && b[5] > cz - half && b[1] < y1 && b[4] > y0) {
+                        return b;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The deepest overlap of a sphere with a wall: a collision box the ground surface does not cover (one that stands more than {@link #WALL_RISE} above the surface at its
+     * closest point). Same result as {@link #deepest} without the ground; null when there is none.
+     */
+    public double[] deepestWall(double cx, double cy, double cz, double r) {
+        double[] best = null;
         int i0 = (int) Math.floor(cx - r) - bx0;
         int i1 = (int) Math.floor(cx + r) - bx0;
         int j0 = (int) Math.floor(cz - r) - bz0;

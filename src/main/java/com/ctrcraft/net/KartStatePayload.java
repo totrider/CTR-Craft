@@ -88,7 +88,7 @@ public record KartStatePayload(int entityId, double x, double y, double z, float
             kart.absMoveTo(p.x(), p.y(), p.z(), p.yRot(), 0.0F);
             kart.setDrawnYawAngle(p.drawnYaw() & 0xFFF);
             kart.setVisualFlags(p.flags() & KartFlags.MASK);
-            kart.setEngineData(p.engine() & 0xFFFF);
+            kart.setEngineData(p.engine() & 0x1FFFFF);
             kart.setTilt(p.tilt() & 0xFFFF);
             // the rider goes with it, and the chunks around the player follow (vanilla does both after a vehicle move)
             kart.positionRider(player);

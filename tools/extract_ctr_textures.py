@@ -32,6 +32,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ctr_disc_textures as ct  # noqa: E402
+import ctr_mesh_pack  # noqa: E402  (a model as an OBJ for a local pack)
 import render_ctr_model as rm  # noqa: E402
 import extract_ctr_sounds as sounds  # noqa: E402  (the disc reader)
 import render_ctr_sprite as sprite  # noqa: E402  (the Wumpa fruit's spin, rendered from the model)
@@ -68,6 +69,44 @@ def clear_background(img):
             seen[y, x] = True
             stack += [(y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)]
     a[seen] = (0, 0, 0, 0)
+    return Image.fromarray(a, "RGBA")
+
+
+def power_icon(vram, layout):
+    """A power-up icon with its backing taken off. The game draws each icon (DecalHUD_DrawWeapon, TRANS_50_DECAL) inside a rectangle: a fill of pure black texels with the
+    semi-transparency bit (bit 15), drawn half and half with the screen, and a one texel frame of opaque near-black ((0, 0, 8)) round it. Every flagged texel is that fill (in
+    all the icons they are pure black, in the rectangle where the art does not cover it) and the frame is at the same place in all of them (rows 2 and h - 4, columns 3 and
+    w - 3 as stored). Both are removed here, because the mod draws its own box. The art's own near-black, its outlines and shading, has no flag and stays, as does everything
+    else; texel 0x0000 is not drawn, as in the game."""
+    img, stp = vram.texture_stp(layout)
+    a = img.copy()
+    h, w = a.shape[:2]
+    dark = (a[:, :, :3].max(axis=2) <= 16) & (a[:, :, 3] == 255)
+    backdrop = dark & ~stp
+    # The frame is one or two texels thick (the TNT and Nitro crates' two) at rows 2 and h - 4 and columns 3 and w - 3 as stored: in that band, every straight run of four or more
+    # unflagged near-black texels is the frame, the art's own outlines never form such a run there.
+    frame = np.zeros((h, w), dtype=bool)
+
+    def runs(hits, mark):
+        n = len(hits)
+        k = 0
+        while k < n:
+            if hits[k]:
+                e = k
+                while e < n and hits[e]:
+                    e += 1
+                if e - k >= 4:
+                    mark(k, e)
+                k = e
+            else:
+                k += 1
+
+    for r in (2, 3, h - 5, h - 4):
+        runs(backdrop[r], lambda k, e, r=r: frame.__setitem__((r, slice(k, e)), True))
+    for c in (2, 3, w - 4, w - 3):
+        runs(backdrop[:, c], lambda k, e, c=c: frame.__setitem__((slice(k, e), c), True))
+    a[stp] = (0, 0, 0, 0)
+    a[backdrop & frame] = (0, 0, 0, 0)
     return Image.fromarray(a, "RGBA")
 
 
@@ -155,6 +194,26 @@ def sheet(question, planks, strip, fruit, q):
     return im
 
 
+def full_burst(quarter):
+    """The shine behind the fruit and the held power-up (UI_WeaponBG_DrawShine) is one quarter of a burst, drawn four times mirrored round a centre: the whole burst from the
+    shared pack's `poweredup` picture (its centre is the bottom right corner)."""
+    # the particle's burst: white, with the brightness as alpha (the game draws it additively, so black is nothing), the empty rim trimmed off so the mirrored quarters meet
+    # without a seam
+    a = np.array(quarter)
+    lum = a[:, :, :3].max(axis=2).astype(np.uint16)
+    a[:, :, 3] = np.where(a[:, :, 3] > 0, np.minimum(255, lum * 255 // 200), 0).astype(np.uint8)
+    a[:, :, :3] = 255
+    quarter = Image.fromarray(a, "RGBA")
+    quarter = quarter.crop(quarter.getbbox())
+    w, h = quarter.size
+    full = Image.new("RGBA", (2 * w, 2 * h), (0, 0, 0, 0))
+    full.alpha_composite(quarter, (0, 0))
+    full.alpha_composite(quarter.transpose(Image.FLIP_LEFT_RIGHT), (w, 0))
+    full.alpha_composite(quarter.transpose(Image.FLIP_TOP_BOTTOM), (0, h))
+    full.alpha_composite(quarter.transpose(Image.ROTATE_180), (w, h))
+    return full
+
+
 def dust_puff(img):
     """An original dust puff picture for the particle: its black backdrop (additive blending in the game, so black adds nothing) is transparent."""
     a = np.array(img)
@@ -240,6 +299,9 @@ def write_pack(root, name, description, files):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         if isinstance(payload, Image.Image):
             payload.save(path)
+        elif isinstance(payload, str):
+            with open(path, "w", encoding="utf-8", newline="\n") as f:
+                f.write(payload)
         else:
             with open(path, "w", encoding="utf-8", newline="\n") as f:
                 json.dump(payload, f, indent=2)
@@ -278,19 +340,34 @@ def main():
 
     # the power-up icons are stored on their side in the game's texture page (the picture is 32 wide and 48 high but upright it is 48 by 32): turn them a quarter
     # turn counter-clockwise
-    icons = {pid: icon(n).transpose(Image.ROTATE_90) for pid, n in POWER_ICONS.items()}
+    def power(name):
+        if name not in icon_table:
+            sys.exit("icon %r is not in shared.mpk (is this the NTSC-U disc?)" % name)
+        return power_icon(vram, icon_table[name])
+
+    icons = {pid: power(n).transpose(Image.ROTATE_90) for pid, n in POWER_ICONS.items()}
     # the picture of a power-up with ten wumpa ("juiced up"): the game has them for three of them
     for pid, name in JUICED_ICONS.items():
-        icons[pid] = icon(name).transpose(Image.ROTATE_90)
+        icons[pid] = power(name).transpose(Image.ROTATE_90)
     # the TNT and Nitro crates are in the shared model pack (BIGFILE entry 259): the real models, seen from the side, the top and the bottom with render_ctr_model, a face picture
     # each (the four sides of a crate are the same)
     pack = ct.pack_models(big.read(ct.SHARED_MPK))
     crates = {}
     for key in ("tnt", "nitro"):
-        pm = rm.Prepared(vram, pack["crate_" + key])
-        crates[key] = {"side": rm.render_view(pm, 0, 0, 96, fit_bbox=True), "top": rm.render_view(pm, 0, 90, 96, fit_bbox=True),
+        pm = rm.Prepared(vram, pack["crate_" + key], up=1)          # the pack's models have their height in the second coordinate
+        # the lettering runs up the model's sides (the same picture is on all six faces): the side is turned a quarter so it reads along the face of the cube
+        crates[key] = {"side": rm.render_view(pm, 0, 0, 96, fit_bbox=True).transpose(Image.ROTATE_270), "top": rm.render_view(pm, 0, 90, 96, fit_bbox=True),
                        "bottom": rm.render_view(pm, 0, -90, 96, fit_bbox=True)}
+    # the bomb rolling: 16 pictures of one turn about its axle from each of 8 camera azimuths (rm.roll_atlas), 64 px each; the mod draws it as a billboard
+    bomb_roll = rm.roll_atlas(rm.Prepared(vram, pack["bomb"], up=1), 64)
     wumpa = icon(WUMPA_ICON)
+    # the HUD shine: the quarter burst exactly as the game has it (it draws it four times mirrored, with gouraud colours and the PS1's colour / 128 modulation: ItemHud does
+    # that). The texel grey runs 0 to 189, and the last texel column is empty: trimmed, so the mirrored quarters meet without a seam
+    shine = to_image(vram.texture(icon_table["poweredup"]))
+    shine = shine.crop((0, 0, shine.getbbox()[2], shine.height))
+    burst = full_burst(to_image(vram.texture(icon_table["poweredup"])))
+    burst_square = Image.new("RGBA", (burst.width, burst.width), (0, 0, 0, 0))
+    burst_square.alpha_composite(burst, (0, (burst.width - burst.height) // 2))
     lamps = {k: icon(n) for k, n in LAMPS.items()}
     puffs = [dust_puff(to_image(vram.texture(icon_table["dustpuff0%d" % i]))) for i in range(5)]
     # the arrangement whose seam matches (found by comparing the edges of the pictures): shadow2 upside down above shadow1
@@ -316,6 +393,21 @@ def main():
                        "bottom": rm.render_view(pm, 0, -90, 96, fit_bbox=True)}
     print("crate faces: %dx%d and %dx%d" % (question.width, question.height, planks.width, planks.height))
 
+    # the bomb's rolling pictures and the burst effects: the same for both packs (their sizes are not the crates' or icons' scale)
+    bomb_files = {"textures/entity/bomb_roll.png": bomb_roll,
+                  "textures/gui/glow.png": shine,
+                  "textures/gui/glow.png.mcmeta": {"texture": {"blur": True, "clamp": True}},        # smooth, and no wrapping round the edge (that draws lines)
+                  "textures/particle/burst.png": burst_square}
+    # N. Brio's Beakers, the original meshes (frame 0 of the bubble animation) as 3D models: an OBJ and an atlas each, loaded by NeoForge's OBJ loader. The level is 108.8 units
+    # to the block, as the crates are (one block); the beaker comes out 0.91 blocks tall
+    beaker_files = {}
+    for key in ("green", "red"):
+        beaker_files.update(ctr_mesh_pack.mesh_pack_files(vram, pack["beaker" + key], "beaker_" + key, 1.0 / 108.8))
+    # the Wumpa fruit placed in the world as a 3D model, too (Crash Cove's level file; untextured, Gouraud shaded: baked into the atlas): the leaves are double sided. It replaces the
+    # animated sprite in the pickup model; the sprite strip stays for the HUD
+    wumpa_files = ctr_mesh_pack.mesh_pack_files(vram, models["fruit"], "wumpa", 1.0 / 108.8, up=2, animated=False, honour_cull=True)
+    # the crate's break-up: the original's 22 flying pieces of 12 frames (a particle, client/CrateBreakParticle), picture sheet and positions
+    crate_break_files = ctr_mesh_pack.shard_files(vram, pack["crate_explosion"], "crate_break", 1.0 / 108.8)
     packs = []
     if True:
         files = {"textures/item/pickups.png": sheet(scaled(question_96, (32, 32)), scaled(planks_96, (32, 32)), None, fruit, 32),
@@ -323,7 +415,11 @@ def main():
                  "models/item/pickup_fruit_crate.json": cube([0, 8, 8, 16]),
                  "textures/gui/wumpa.png": scaled(wumpa, (24, 16)),
                  "textures/entity/kart_shadow.png": scaled(shadow, (shadow.width // 2, shadow.height // 2))}
+        files.update(bomb_files)
+        files.update(beaker_files)
         files.update(sprite_files(models["fruit"], 32))
+        files.update(wumpa_files)
+        files.update(crate_break_files)
         files.update(crate_cube_files(crates, 2))
         for i, pimg in enumerate(puffs):
             files["textures/particle/dust_puff_%d.png" % i] = scaled(pimg, (16, 16))
@@ -341,7 +437,11 @@ def main():
                  "models/item/pickup_fruit_crate.json": cube([0, 8, 8, 16]),
                  "textures/gui/wumpa.png": wumpa,
                  "textures/entity/kart_shadow.png": shadow}
+        files.update(bomb_files)
+        files.update(beaker_files)
         files.update(sprite_files(models["fruit"], 96))
+        files.update(wumpa_files)
+        files.update(crate_break_files)
         files.update(crate_cube_files(crates, 1))
         files.update({"textures/particle/dust_puff_%d.png" % i: pimg for i, pimg in enumerate(puffs)})
         files["textures/particle/clod.png"] = clod

@@ -119,6 +119,21 @@
       "ctrcraft:crate_break"
     ]
   },
+  "bomb_launch": {
+    "sounds": [
+      "ctrcraft:bomb_launch"
+    ]
+  },
+  "bomb_roll": {
+    "sounds": [
+      "ctrcraft:bomb_roll"
+    ]
+  },
+  "bomb_explode": {
+    "sounds": [
+      "ctrcraft:bomb_explode"
+    ]
+  },
   "item_roll": {
     "sounds": [
       "ctrcraft:item_roll"

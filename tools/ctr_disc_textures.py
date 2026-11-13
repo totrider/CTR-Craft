@@ -67,6 +67,33 @@ class Vram:
             self.mem[y: y + h, x: x + w] = words
             pos += length
 
+    def texture_stp(self, layout):
+        """The same texels as {texture}, and which of them have the semi-transparency bit (bit 15 of the colour word) set: (RGBA image, bool array of the same size). The GPU
+        blends only those texels of a primitive that asks for semi-transparency; the others are drawn solid."""
+        img = self.texture(layout)
+        u0, v0, clut, u1, v1, tpage, u2, v2, u3, v3 = struct.unpack("<BBHBBHBBBB", layout)
+        us = (u0, u1, u2, u3)
+        vs = (v0, v1, v2, v3)
+        x0, y0 = min(us), min(vs)
+        h, w = img.shape[:2]
+        px, py = (tpage & 15) * 64, ((tpage >> 4) & 1) * 256
+        depth = (tpage >> 7) & 3
+        cx, cy = (clut & 63) * 16, clut >> 6
+        stp = np.zeros((h, w), dtype=bool)
+        for j in range(h):
+            for i in range(w):
+                u, v = x0 + i, y0 + j
+                if depth == 0:
+                    word = int(self.mem[py + v, px + u // 4])
+                    c = int(self.mem[cy, cx + ((word >> (4 * (u % 4))) & 15)])
+                elif depth == 1:
+                    word = int(self.mem[py + v, px + u // 2])
+                    c = int(self.mem[cy, cx + ((word >> (8 * (u % 2))) & 255)])
+                else:
+                    c = int(self.mem[py + v, px + u])
+                stp[j, i] = c != 0 and (c >> 15) & 1 == 1
+        return img, stp
+
     def texture(self, layout):
         """Decode a TextureLayout (12 bytes) to an RGBA numpy image (the layout's bounding box). Texel 0x0000 is transparent."""
         u0, v0, clut, u1, v1, tpage, u2, v2, u3, v3 = struct.unpack("<BBHBBHBBBB", layout)
@@ -189,6 +216,63 @@ def layout_bytes(model, index):
 # ------------------------------------------------------------------------------------------------------------------------------- meshes
 
 
+def _vertex_count(data, model):
+    """The number of vertices a model decodes: the commands of its list that do not reuse a vertex (bit 26 clear)."""
+    count = 0
+    pos = model["cmds"] + 4
+    while True:
+        c = _u32(data, pos)
+        pos += 4
+        if c == 0xFFFFFFFF:
+            break
+        if c >> 16 and not (c >> 26) & 1:
+            count += 1
+    return count
+
+
+def _sign_extend(value, bits):
+    value &= (1 << bits) - 1
+    return value - (1 << bits) if value & (1 << (bits - 1)) else value
+
+
+def _signed_bits(data, base, bit_index, bits):
+    """RenderBucket_GetSignedBits: the MSB first bit stream read through little endian 32 bit words; returns (value, new bit index)."""
+    b = bit_index >> 5
+    s = (32 - bits) - (bit_index & 31)
+    word = _u32(data, base + b * 4)
+    if s < 0:
+        ret = ((word << -s) & 0xFFFFFFFF) | (_u32(data, base + (b + 1) * 4) >> (s & 31))
+    else:
+        ret = word >> s
+    return _sign_extend(ret, bits), bit_index + bits
+
+
+def _s8(v):
+    return _sign_extend(v, 8)
+
+
+def _compressed_vertices(data, frame, deltas, scale, count):
+    """The vertices of a delta-compressed animation frame (RenderBucket_UncompressAnimationFrame): the frame's bytes after its 0x1C header are a bit stream; for each vertex
+    the model's delta array holds a temporal word (bits 6-8 / 3-5 / 0-2: the field widths minus one of the three components, bits 25-31 / 17-24 / 9-16: a bias for each, the
+    first doubled), and each component is a running signed byte sum of the fields ({sum + field + bias}, or the field alone when the width is 8 bits). The stream's order is
+    the model's own (b0, b1, b2): x, z, and y last, which is up."""
+    fpos = struct.unpack_from("<3h", data, frame)
+    base = frame + 0x1C
+    bit = 0
+    acc = [0, 0, 0]             # x, "y" (read second), "z" (read third): the game's x_alu, y_alu, z_alu
+    out = []
+    for i in range(count):
+        t = _u32(data, deltas + 4 * i)
+        widths = (t >> 6 & 7, t >> 3 & 7, t & 7)
+        biases = (_sign_extend(t >> 25, 7) * 2, _sign_extend(t >> 17, 8), _sign_extend(t >> 9, 8))
+        for k in range(3):
+            value, bit = _signed_bits(data, base, bit, widths[k] + 1)
+            acc[k] = _s8(value) if widths[k] == 7 else _s8(acc[k] + value + biases[k])
+        b = (acc[0] & 0xFF, acc[1] & 0xFF, acc[2] & 0xFF)       # the stream's order is the model's: x, z, then y, which is up (the third coordinate)
+        out.append(tuple((b[k] + fpos[k]) * scale[k] / 4096.0 for k in range(3)))
+    return out
+
+
 def mesh_vertices(model, frame_index=0):
     """
     The model's vertices (b0, b1, b2) in model units (level units). The game's up axis is the THIRD coordinate b2 (the Wumpa fruit's leaves rise along it) and the plane
@@ -205,9 +289,9 @@ def mesh_vertices(model, frame_index=0):
             raise ValueError("model has neither a frame nor an animation")
         anim = _u32(data, ptr_anims)
         count, size, deltas = struct.unpack_from("<HhI", data, anim + 16)
-        if deltas != 0:
-            raise ValueError("compressed animation frames are not supported here")
         frame = anim + 24 + (frame_index % (count & 0x7FFF)) * size
+        if deltas != 0:
+            return _compressed_vertices(data, frame, deltas, scale, _vertex_count(data, model))
     fpos = struct.unpack_from("<3h", data, frame)
     count = 0
     pos = model["cmds"] + 4

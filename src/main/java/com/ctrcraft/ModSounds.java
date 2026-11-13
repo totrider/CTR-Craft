@@ -36,6 +36,9 @@ public final class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> TNT_TICK = reg("tnt_tick");
     public static final DeferredHolder<SoundEvent, SoundEvent> TNT_EXPLODE = reg("tnt_explode");
     public static final DeferredHolder<SoundEvent, SoundEvent> CRATE_BREAK = reg("crate_break");
+    public static final DeferredHolder<SoundEvent, SoundEvent> BOMB_LAUNCH = reg("bomb_launch");
+    public static final DeferredHolder<SoundEvent, SoundEvent> BOMB_ROLL = reg("bomb_roll");
+    public static final DeferredHolder<SoundEvent, SoundEvent> BOMB_EXPLODE = reg("bomb_explode");
     public static final DeferredHolder<SoundEvent, SoundEvent> ITEM_ROLL = reg("item_roll");
     public static final DeferredHolder<SoundEvent, SoundEvent> ITEM_GET = reg("item_get");
     public static final DeferredHolder<SoundEvent, SoundEvent> ITEM_GET_JUICED = reg("item_get_juiced");

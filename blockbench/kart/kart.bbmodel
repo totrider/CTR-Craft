@@ -1273,7 +1273,7 @@
  ],
  "textures": [
   {
-   "path": "H:\\CTR Craft\\src\\main\\resources\\assets\\ctrcraft\\textures\\item\\kart.png",
+   "path": "H:\\Craft Team Racing\\src\\main\\resources\\assets\\ctrcraft\\textures\\item\\kart.png",
    "name": "kart.png",
    "folder": "",
    "namespace": "",

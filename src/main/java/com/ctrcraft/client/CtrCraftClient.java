@@ -41,14 +41,23 @@ public final class CtrCraftClient {
     public static void registerModels(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event) {
         event.register(TntRenderer.TNT);
         event.register(TntRenderer.NITRO);
+        event.register(PotionRenderer.GREEN);
+        event.register(PotionRenderer.RED);
         event.register(PickupRenderer.WUMPA);
         event.register(PickupRenderer.FRUIT_CRATE);
         event.register(PickupRenderer.POWERUP_CRATE);
     }
 
     @SubscribeEvent
+    public static void addLayers(EntityRenderersEvent.AddLayers event) {
+        RiderPlayerModel.install(event);
+    }
+
+    @SubscribeEvent
     public static void registerReloadListener(net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent event) {
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> GuiTextures.clear());
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) BeakerBubbles::load);
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) CrateBreak::load);
     }
 
     @SubscribeEvent
@@ -56,6 +65,8 @@ public final class CtrCraftClient {
         event.registerSpriteSet(com.ctrcraft.ModParticles.DUST_PUFF.get(), DustPuffParticle.Provider::new);
         event.registerSpriteSet(com.ctrcraft.ModParticles.CLOD.get(), ClodParticle.Provider::new);
         event.registerSpriteSet(com.ctrcraft.ModParticles.SMOKE_RING.get(), SmokeRingParticle.Provider::new);
+        event.registerSpriteSet(com.ctrcraft.ModParticles.BURST.get(), BurstParticle.Provider::new);
+        event.registerSpecial(com.ctrcraft.ModParticles.CRATE_BREAK.get(), new CrateBreakParticle.Provider());
     }
 
     /** Use the held power-up. */
@@ -68,6 +79,7 @@ public final class CtrCraftClient {
         event.registerEntityRenderer(ModEntities.PICKUP.get(), PickupRenderer::new);
         event.registerEntityRenderer(ModEntities.TNT.get(), TntRenderer::new);
         event.registerEntityRenderer(ModEntities.POTION.get(), PotionRenderer::new);
+        event.registerEntityRenderer(ModEntities.BOMB.get(), BombRenderer::new);
         event.registerBlockEntityRenderer(com.ctrcraft.ModBlockEntities.PICKUP_SPOT.get(), PickupSpotRenderer::new);
     }
 

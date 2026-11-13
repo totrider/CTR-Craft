@@ -36,6 +36,25 @@ public class PickupEntity extends Entity {
         entityData.set(DATA_KIND, kind.ordinal());
     }
 
+    /** The entity event that tells the clients a crate broke (the pieces fly): sent just before the entity is removed. */
+    public static final byte EVENT_BREAK = 77;
+
+    /** A crate (not a fruit) breaks: its pieces fly on every client that sees it. */
+    private void breakUp(ServerLevel level) {
+        if (kind() != PickupKind.FRUIT) level.broadcastEntityEvent(this, EVENT_BREAK);
+    }
+
+    @Override
+    public void handleEntityEvent(byte id) {
+        if (id != EVENT_BREAK) {
+            super.handleEntityEvent(id);
+            return;
+        }
+        // the weapon crate's break is turned at random about the vertical axis (RB_CrateWeapon_ThCollide), the fruit crate's is not
+        double turn = kind() == PickupKind.POWERUP_CRATE ? random.nextInt(360) : 0.0;
+        level().addParticle(com.ctrcraft.ModParticles.CRATE_BREAK.get(), getX(), getY(), getZ(), turn, 0.0, 0.0);
+    }
+
     public void setSpot(BlockPos spot) {
         this.spot = spot;
     }
@@ -59,10 +78,26 @@ public class PickupEntity extends Entity {
         for (KartEntity kart : level.getEntitiesOfClass(KartEntity.class, reach)) {
             if (kart.getControllingPassenger() instanceof ServerPlayer driver && ItemManager.collect(this, be, driver)) {
                 be.taken(this);
+                breakUp(level);
                 discard();
                 return;
             }
         }
+    }
+
+    /**
+     * A bomb rolled into this crate (RB_CrateWeapon_ThCollide / RB_CrateFruit_ThCollide with a DYNAMIC_BOMB hitter): the crate breaks and its driver gets what a kart
+     * touching it would, the wumpa or the roulette. Returns whether it was used up.
+     */
+    public boolean breakBy(ServerPlayer driver) {
+        if (!(level() instanceof ServerLevel level) || spot == null || !(level.getBlockEntity(spot) instanceof PickupSpotBlockEntity be) || !be.owns(this)) return false;
+        if (ItemManager.collect(this, be, driver)) {
+            be.taken(this);
+            breakUp(level);
+            discard();
+            return true;
+        }
+        return false;
     }
 
     @Override

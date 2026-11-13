@@ -17,6 +17,7 @@ public final class CtrConfig {
     public static final ModConfigSpec.BooleanValue ENTITY_DAMAGE;
     public static final ModConfigSpec.BooleanValue ENTITY_DAMAGE_PLAYERS;
     public static final ModConfigSpec.DoubleValue ENTITY_DAMAGE_SCALE;
+    public static final ModConfigSpec.DoubleValue WEAPON_SPEED_SCALE;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -46,6 +47,11 @@ public final class CtrConfig {
                 .comment("Multiplier on the damage: 1 is about 1 heart for every 2 blocks/s of speed over 6 (12 hp, 6 hearts, at top speed).")
                 .defineInRange("damageScale", 1.0, 0.0, 10.0);
         builder.pop();
+        WEAPON_SPEED_SCALE = builder
+                .comment("Multiplier on how fast the Bomb rolls and how far a Beaker is thrown (its horizontal speed). 1 is the original's value in the kart's own scale",
+                        "(the bomb 96 units a frame against a kart's 78, a beaker 120): the world is 50 units to a block like the kart, so these are fast beside crates and",
+                        "beakers drawn a block big. Lower it to slow them down; it does not change the kart.")
+                .defineInRange("weaponSpeedScale", 1.0, 0.1, 2.0);
         SPEC = builder.build();
     }
 }

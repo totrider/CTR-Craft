@@ -25,7 +25,7 @@ rng = np.random.default_rng(1996)
 
 SOUNDS = ["engine_loop", "skid_loop", "turbo_loop", "hop", "land", "drift_start", "boost", "boost_fail", "meter_red", "meter_full",
           "hang_time", "wall_hit", "slam", "spin_out",
-          "light_count", "light_green", "fruit_pickup", "glass_shatter", "mine_drop", "tnt_hit", "tnt_land", "tnt_tick", "tnt_explode", "crate_break", "item_roll", "item_get", "item_get_juiced", "crash_soft", "crash_mid", "crash_hard", "fruit_arrive"]
+          "light_count", "light_green", "fruit_pickup", "glass_shatter", "mine_drop", "tnt_hit", "tnt_land", "tnt_tick", "tnt_explode", "crate_break", "bomb_launch", "bomb_roll", "bomb_explode", "item_roll", "item_get", "item_get_juiced", "crash_soft", "crash_mid", "crash_hard", "fruit_arrive"]
 
 
 # the race music's events: empty here (the mod ships no music), a resource pack puts its files in them (see docs/MUSIC.md)
@@ -254,6 +254,29 @@ def tnt_explode():
     x = lowpass(noise(len(t)), 900) * decay(t, 0.25) + 0.8 * np.sin(2 * np.pi * (70 - 30 * t) * t) * decay(t, 0.3)
     x += 0.4 * bandpass(noise(len(t)), 1500, 6000) * decay(t, 0.05)
     return fade(norm(x, 0.9))
+
+
+def bomb_launch():
+    t = t_axis(0.3)
+    x = lowpass(noise(len(t)), 1800) * decay(t, 0.07) + 0.7 * np.sin(2 * np.pi * chirp_phase(t, 420, 110)) * decay(t, 0.09)
+    return fade(norm(x, 0.8))
+
+
+def bomb_roll():
+    n = int(SR * 0.5)
+    x = bandpass(noise(n + 6000), 90, 700)
+    x *= 0.6 + 0.4 * np.abs(np.sin(2 * np.pi * 4 * np.arange(len(x)) / SR))      # a heavy ball turning over, four beats a second
+    xf = 3000                                     # cross-fade the tail into the head so it loops cleanly
+    body = x[xf: xf + n].copy()
+    body[:xf] = body[:xf] * np.linspace(0, 1, xf) + x[:xf] * np.linspace(1, 0, xf)
+    return norm(body, 0.5)
+
+
+def bomb_explode():
+    t = t_axis(1.0)
+    x = lowpass(noise(len(t)), 1200) * decay(t, 0.3) + 0.9 * np.sin(2 * np.pi * (85 - 40 * t) * t) * decay(t, 0.32)
+    x += 0.5 * bandpass(noise(len(t)), 1800, 7000) * decay(t, 0.06)
+    return fade(norm(x, 0.95))
 
 
 def crate_break():

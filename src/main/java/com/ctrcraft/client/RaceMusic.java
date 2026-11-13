@@ -25,7 +25,7 @@ import net.minecraft.util.RandomSource;
  * (HOWL_AudioState.c, Audio_SetMaskSong(20)) for the rest of the race, while the jingle plays at its own speed over it. The level music is rendered audio here, so the speed
  * can only be changed together with the pitch ({@link #FINAL_LAP_SPEED}, about +20 bpm at the usual 170 to 190 bpm of the songs).
  *
- * <p>Nothing is shipped: the mod only plays what a resource pack puts into these sound events (all in the CTR Craft namespace, in the music category of the sound
+ * <p>Nothing is shipped: the mod only plays what a resource pack puts into these sound events (all in the ctrcraft namespace, in the music category of the sound
  * options). Without any, nothing plays and nothing is logged. A pack adds its files to {@code assets/ctrcraft/sounds.json}; several sounds in one event are
  * picked at random, again at every repeat of the race music. See docs/MUSIC.md.
  * <pre>

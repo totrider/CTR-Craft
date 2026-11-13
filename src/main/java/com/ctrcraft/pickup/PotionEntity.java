@@ -76,8 +76,8 @@ public class PotionEntity extends Entity implements MinePool.Mine {
     /** POTION_THROW_FORWARD: off in an arc along (dx, dz), a unit vector. */
     public void throwFrom(double dx, double dz) {
         thrown = true;
-        vx = dx * THROW_SPEED;
-        vz = dz * THROW_SPEED;
+        vx = dx * THROW_SPEED * com.ctrcraft.CtrConfig.WEAPON_SPEED_SCALE.get();
+        vz = dz * THROW_SPEED * com.ctrcraft.CtrConfig.WEAPON_SPEED_SCALE.get();
         vy = THROW_UP;
     }
 

@@ -54,10 +54,23 @@ public class TntRenderer extends EntityRenderer<TntEntity> {
         float t = entity.tickCount + partialTick;
         pose.pushPose();
         net.minecraft.world.entity.Entity kart = entity.targetKart() >= 0 ? entity.level().getEntity(entity.targetKart()) : null;
+        float headYaw = Float.NaN;
         if (kart != null && fuse >= 0) {
-            // on the kart's head, every frame, from the kart's own smooth position (the crate's own updates come 20 times a second)
+            // on the kart's head, every frame, from the kart's own smooth position (the crate's own updates come 20 times a second); and it goes where the head goes: the body's turn
+            // (the lean on the slope, a jump, a steering lean) about the kart's origin, and the head's own turn into a corner
             net.minecraft.world.phys.Vec3 d = kart.getPosition(partialTick).subtract(entity.getPosition(partialTick));
-            pose.translate(d.x, d.y + 0.9, d.z);
+            if (kart instanceof com.ctrcraft.kart.KartEntity k) {
+                KartRenderer.applyBodyTurn(pose, k, d.x, d.y, d.z, partialTick);
+                headYaw = -(k.renderYawDegrees(partialTick) + k.steer() * KartRenderer.HEAD_TWIST);
+            }
+            pose.translate(d.x, d.y, d.z);
+            if (kart instanceof com.ctrcraft.kart.KartEntity k) {
+                // the head leans with the upper body about the hips (the rider's own lean is RiderPlayerModel's)
+                pose.translate(0.0, 0.3, 0.0);
+                pose.mulPose(Axis.ZP.rotationDegrees(-k.steer() * KartRenderer.LEAN));
+                pose.translate(0.0, -0.3, 0.0);
+            }
+            pose.translate(0.0, 0.9, 0.0);
         }
         pose.scale(SIZE, SIZE, SIZE);
         if (sprite) {
@@ -66,7 +79,7 @@ public class TntRenderer extends EntityRenderer<TntEntity> {
             pose.translate(-0.5, -0.5, -0.5);
         } else {
             if (fuse < 0) TiltRender.apply(pose, entity.tilt());         // lies on the surface it came to rest on, facing the way the kart that dropped it faced
-            pose.mulPose(Axis.YP.rotationDegrees(-entity.getYRot()));
+            pose.mulPose(Axis.YP.rotationDegrees(Float.isNaN(headYaw) ? -entity.getYRot() : headYaw));
             if (fuse >= 0) pose.translate(0.0, Math.sin(t * 0.5) * 0.04, 0.0);
             pose.translate(-0.5, 0.0, -0.5);
         }

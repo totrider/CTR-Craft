@@ -38,6 +38,11 @@ public final class ModEntities {
             EntityType.Builder.<com.ctrcraft.pickup.TntEntity>of(com.ctrcraft.pickup.TntEntity::new, MobCategory.MISC)
                     .sized(0.8F, 0.8F).clientTrackingRange(10).updateInterval(2).noSave().build("tnt"));
 
+    /** The Bomb power-up's rolling bomb (never saved). */
+    public static final DeferredHolder<EntityType<?>, EntityType<com.ctrcraft.pickup.BombEntity>> BOMB = ENTITIES.register("bomb", () ->
+            EntityType.Builder.<com.ctrcraft.pickup.BombEntity>of(com.ctrcraft.pickup.BombEntity::new, MobCategory.MISC)
+                    .sized(0.6F, 0.6F).clientTrackingRange(10).updateInterval(1).noSave().build("bomb"));
+
     private ModEntities() {}
 
     public static void register(IEventBus modEventBus) {
