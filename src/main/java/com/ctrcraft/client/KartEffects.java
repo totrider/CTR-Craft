@@ -70,7 +70,7 @@ public final class KartEffects {
         }
         if (KartFlags.has(flags, KartFlags.BACKFIRE)) {
             for (int i = 0; i < 3; i++) {
-                level.addParticle(ParticleTypes.LARGE_SMOKE, ex, ey, ez,
+                level.addParticle(com.ctrcraft.ModParticles.DUST_PUFF.get(), ex, ey, ez,
                         -fx * 0.08 + (rnd.nextDouble() - 0.5) * 0.04, 0.03, -fz * 0.08 + (rnd.nextDouble() - 0.5) * 0.04);
             }
         }
@@ -90,14 +90,31 @@ public final class KartEffects {
         }
         if (KartFlags.has(flags, KartFlags.WALL_RUB)) {
             for (int i = 0; i < 3; i++) {
-                level.addParticle(ParticleTypes.CRIT, x + (rnd.nextDouble() - 0.5) * 0.8, y + 0.3, z + (rnd.nextDouble() - 0.5) * 0.8,
-                        (rnd.nextDouble() - 0.5) * 0.3, 0.12, (rnd.nextDouble() - 0.5) * 0.3);
+                level.addParticle(com.ctrcraft.ModParticles.SMOKE_RING.get(), x + (rnd.nextDouble() - 0.5) * 0.8, y + 0.3, z + (rnd.nextDouble() - 0.5) * 0.8,
+                        (rnd.nextDouble() - 0.5) * 0.2, 0.08, (rnd.nextDouble() - 0.5) * 0.2);
+            }
+        }
+
+        // clods: a moving kart's wheels throw them up from dirt (CTR's dirt terrain emitters, VehEmitter_Terrain_Ground)
+        double moved = Math.hypot(x - kart.xo, z - kart.zo);
+        if (moved > 0.35) {
+            net.minecraft.world.level.block.state.BlockState under = level.getBlockState(net.minecraft.core.BlockPos.containing(x, y - 0.2, z));
+            if (under.is(com.ctrcraft.ModTags.SURFACE_DIRT) || under.is(com.ctrcraft.ModTags.SURFACE_SLOW_DIRT)) {
+                int n = 1 + (int) Math.min(3.0, moved * 3.0);
+                for (int i = 0; i < n; i++) {
+                    int side = rnd.nextBoolean() ? 1 : -1;
+                    double sp = 0.06 + rnd.nextDouble() * 0.10;
+                    level.addParticle(com.ctrcraft.ModParticles.CLOD.get(),
+                            x - fx * 0.34 + lx * 0.47 * side, y + 0.08, z - fz * 0.34 + lz * 0.47 * side,
+                            -fx * sp + lx * side * 0.04 + (rnd.nextDouble() - 0.5) * 0.03, 0.12 + rnd.nextDouble() * 0.12,
+                            -fz * sp + lz * side * 0.04 + (rnd.nextDouble() - 0.5) * 0.03);
+                }
             }
         }
     }
 
     private static void smoke(Level level, RandomSource rnd, double x, double y, double z) {
-        level.addParticle(ParticleTypes.CLOUD, x, y, z, (rnd.nextDouble() - 0.5) * 0.02, 0.02, (rnd.nextDouble() - 0.5) * 0.02);
+        level.addParticle(com.ctrcraft.ModParticles.DUST_PUFF.get(), x, y, z, (rnd.nextDouble() - 0.5) * 0.02, 0.015, (rnd.nextDouble() - 0.5) * 0.02);
     }
 
     /** One engine loop and one tyre-skid loop per driven kart, started when somebody sits in it, gone when they leave. */

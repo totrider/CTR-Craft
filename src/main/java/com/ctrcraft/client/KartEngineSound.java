@@ -23,6 +23,12 @@ public class KartEngineSound extends AbstractTickableSoundInstance {
         update();
     }
 
+    /** Without this Minecraft drops the loop for good when the master volume is turned to 0, and it never comes back. */
+    @Override
+    public boolean canStartSilent() {
+        return true;
+    }
+
     @Override
     public void tick() {
         if (kart.isRemoved() || kart.getPassengers().isEmpty()) {

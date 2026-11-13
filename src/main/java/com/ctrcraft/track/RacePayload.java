@@ -1,5 +1,9 @@
 package com.ctrcraft.track;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import com.ctrcraft.CtrCraftMod;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -13,7 +17,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * racing. {@code placeSeq} changes when the server has put the racer on the grid ({@code gx..gyaw}); the client driver then places its sim.
  */
 public record RacePayload(int phase, int ticksLeft, int lights, int laps, int lap, int place, int field, int timeMs, int lastLapMs,
-                          int bestLapMs, boolean hold, int placeSeq, double gx, double gy, double gz, float gyaw, int finishPlace, int karts)
+                          int bestLapMs, boolean hold, int placeSeq, double gx, double gy, double gz, float gyaw, int finishPlace, int karts,
+                          List<UUID> order, List<Integer> lapTimes)
         implements CustomPacketPayload {
     public static final int OFF = 0;
     public static final int GATHER = 1;
@@ -26,7 +31,7 @@ public record RacePayload(int phase, int ticksLeft, int lights, int laps, int la
     public static final StreamCodec<RegistryFriendlyByteBuf, RacePayload> STREAM_CODEC = StreamCodec.of(RacePayload::write, RacePayload::read);
 
     public static RacePayload off() {
-        return new RacePayload(OFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0, 0, 0);
+        return new RacePayload(OFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0, 0, 0, List.of(), List.of());
     }
 
     private static void write(RegistryFriendlyByteBuf b, RacePayload p) {
@@ -48,12 +53,28 @@ public record RacePayload(int phase, int ticksLeft, int lights, int laps, int la
         b.writeFloat(p.gyaw);
         b.writeVarInt(p.finishPlace);
         b.writeVarInt(p.karts);
+        b.writeVarInt(p.order.size());
+        for (UUID id : p.order) b.writeUUID(id);
+        b.writeVarInt(p.lapTimes.size());
+        for (int t : p.lapTimes) b.writeVarInt(t);
     }
 
     private static RacePayload read(RegistryFriendlyByteBuf b) {
-        return new RacePayload(b.readVarInt(), b.readVarInt(), b.readVarInt(), b.readVarInt(), b.readVarInt(), b.readVarInt(), b.readVarInt(),
-                b.readVarInt(), b.readVarInt(), b.readVarInt(), b.readBoolean(), b.readVarInt(), b.readDouble(), b.readDouble(), b.readDouble(),
-                b.readFloat(), b.readVarInt(), b.readVarInt());
+        int phase = b.readVarInt(), ticksLeft = b.readVarInt(), lights = b.readVarInt(), laps = b.readVarInt(), lap = b.readVarInt();
+        int place = b.readVarInt(), field = b.readVarInt(), timeMs = b.readVarInt(), lastLapMs = b.readVarInt(), bestLapMs = b.readVarInt();
+        boolean hold = b.readBoolean();
+        int placeSeq = b.readVarInt();
+        double gx = b.readDouble(), gy = b.readDouble(), gz = b.readDouble();
+        float gyaw = b.readFloat();
+        int finishPlace = b.readVarInt(), karts = b.readVarInt();
+        int n = Math.min(b.readVarInt(), 16);
+        List<UUID> order = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) order.add(b.readUUID());
+        int m = Math.min(b.readVarInt(), 64);
+        List<Integer> lapTimes = new ArrayList<>(m);
+        for (int i = 0; i < m; i++) lapTimes.add(b.readVarInt());
+        return new RacePayload(phase, ticksLeft, lights, laps, lap, place, field, timeMs, lastLapMs, bestLapMs, hold, placeSeq, gx, gy, gz, gyaw,
+                finishPlace, karts, order, lapTimes);
     }
 
     @Override

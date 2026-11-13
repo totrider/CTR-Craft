@@ -47,16 +47,16 @@ Opt-in by nature (nothing here changes how a kart drives).
   1, 2, 3, 5, 7, 10, 20; saved with the track), **Cancel race**. Needs track-editing permission for now (a player-facing way to start races comes with the ready UI).
 - **Gather (10 s):** drive your kart into the area round the Start node (24 blocks sideways, 12 up or down). Everyone within 64 blocks sees "Race starts in N" and the kart count.
   At zero the karts in the area are the entrants; none -> called off.
-- **Grid and lights:** entrants are teleported to **randomly ordered** slots behind the node (two abreast, staggered, 3.5 blocks per row; `RaceGrid.slot`), facing the node's facing.
+- **Grid and lights:** entrants are teleported to **randomly ordered** slots behind the node (the original's two rows of four abreast, `RaceGrid.slot`: every one of CTR's 16 race tracks has the same eight `DriverSpawn` entries, read from the disc: two rows of four abreast (3.8 blocks apart), the rows 5 blocks apart; racers past eight repeat the pattern behind), facing the node's facing.
   The client places its sim there (`RacePayload.placeSeq`). Karts are **held revving** (`RevEngine`, ctr-native `VehStuckProc_RevEngine`: hold gas to rev, pump it for the big start
-  boost, hold it too long and the engine over-revs and locks out) while three lights come on (`RaceGrid.lightsLit`). At GO the revs earn the start boost (small or big, 960 reserves).
-  From the decomp: the 0xF00 = 3840 ms timer and release at 0. **Ours, not in the decomp as read:** the three lights 960 ms apart, a second to settle before the first.
+  boost, hold it too long and the engine over-revs and locks out) while four lamps count down (`RaceGrid.lightsLit`). At GO the revs earn the start boost (small or big, 960 reserves).
+  From the decomp: the 0xF00 = 3840 ms timer, release at 0, and the lamps (`DotLights_AudioAndVideo`): red at 2880, 1920 and 960 ms left, green at 0 (= GO), then the lamps stay up 960 ms. **Ours:** a second to settle on the grid before the countdown.
 - **Racing:** the server follows each kart's reported positions (`RaceManager.onKartMoved`) and counts rings with `RaceProgress`: the main path rings in order, or a recorded branch
   instead of the stretch it replaces (then the skipped main nodes count). Passing the start ring again closes a lap. Position = finishers first, then progress round the course,
   ties by distance to the next ring. Clock = server ticks (50 ms resolution).
 - **End:** everybody finished, nobody left in a kart, or 60 s after the first finisher. Results go to chat. Leaving the kart, logging out or changing dimension is a DNF.
   Changing the track (breaking a node, unlinking) during a race calls it off.
-- **HUD** (`RaceHud`): the gathering count, the three lights and the rev bar (red from the acceleration speed up, where a start boost is earned), then LAP, POS, time, best lap, "GO!".
+- **HUD** (`RaceHud`): the gathering count, the four lamps and the rev bar (red from the acceleration speed up, where a start boost is earned), then the race screen laid out as the original's 512 x 216 HUD (clock and lap times top left, the top four as skin heads below, the place in big digits bottom left, lamps top centre, item and Wumpa top centre-left); only the lap counter is moved, to the right edge above the driving meters. The start grid and the gathering box stay drawn until the race has really started (GO), not just until the countdown begins.
 - Code: `RaceProgress`, `RaceGrid` (pure, `RaceProgressTest`), `RevEngine` (physics, `RevEngineTest`), `RaceManager`, `RacePayload`/`RaceClient`, `RaceHud`, `KartDriver` (hold, placement, boost).
 - **Not yet:** kart-vs-kart bumping, wrong-way detection, respawn when out of bounds, a ready check, time trials, a player-facing start (all step 4 / roadmap).
 
@@ -69,10 +69,10 @@ Changes after the first race test, from the user's feedback. Everything below re
 - **Resizing:** Track Tool, point at a side of a box (the side under the crosshair is outlined yellow): **right-click extends it one block, left-click retracts it** (1..64 blocks). The click is made on the client (`TrackBoxInput`, `BoxPicker`: the box sides are not blocks) and checked on the server
   (`TrackBoxPayload`: node, distance, permission). The node itself, and any block nearer than the side, win the click (so linking still works).
 - **Menu:** unchanged: **sneak + right-click on the Start node** (the node itself, not a box side) opens the menu. Right-clicking the air does nothing special, so it cannot clash with box sides.
-- **Races start by driving in.** Server config `raceMinRacers` (default 1) and `raceStartRadius` (default 24 blocks, a sphere round the Start node). Each kart position report is
-  compared with the Start nodes (`RaceManager.trackAreas`, nothing else polls): entering the sphere adds the kart to the node's set, and when the set reaches the minimum on a valid
+- **Races start by driving in.** Server config `raceMinRacers` (default 1). The area is `GatherZone`: a 16 x 16 box behind the Start node's line (and 5 above, 3 below it), a fixed size whatever the node's own box is. Each kart position report is
+  compared with the Start nodes (`RaceManager.trackAreas`, nothing else polls): entering the box adds the kart to the node's set, and when the set reaches the minimum on a valid
   track the 10 s countdown starts; leaving it (or stepping out of the kart, logging out, changing dimension) removes the kart and cancels the countdown if too few remain. Whoever
-  is in the sphere at zero is entered. The set is kept apart from races, so karts still inside after a race do not start the next one: leave and drive in again.
+  is in the box at zero is entered. The set is kept apart from races, so karts still inside after a race do not start the next one: leave and drive in again.
   The menu's **Start race** still starts one by hand (anyone in the area, any number, for testing alone).
 - **Wrench** (`ctrcraft:wrench`): right-click a kart with it to switch **"can start races"** on or off (on by default; kept in the kart's NBT). An off kart is never counted as
   inside an area. The tuning profile is meant to go on this item later.

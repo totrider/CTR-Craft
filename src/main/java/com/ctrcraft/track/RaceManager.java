@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import com.ctrcraft.CtrConfig;
+import com.ctrcraft.ModSounds;
 import com.ctrcraft.CtrCraftMod;
 import com.ctrcraft.kart.KartEntity;
 
@@ -62,6 +63,8 @@ public final class RaceManager {
         int lapStartTick;
         int lastLapMs;
         int bestLapMs;
+        /** The time of each lap finished so far, ms. */
+        final List<Integer> lapTimes = new ArrayList<>();
         int finishPlace;
         int finishMs;
         boolean out;
@@ -99,6 +102,37 @@ public final class RaceManager {
         }
     }
 
+    /** A racer's place for the power-up roulette: the field size, the place (0 is first) and the lap (0 is the first). */
+    public record Standing(int field, int rank, int lapIndex) {}
+
+    public static Standing standing(ServerPlayer player) {
+        Race r = BY_PLAYER.get(player.getUUID());
+        if (r == null || r.phase != RacePayload.RACING) return null;
+        Racer rc = r.racers.get(player.getUUID());
+        if (rc == null) return null;
+        return new Standing(r.racers.size(), Math.max(0, ranking(r).indexOf(rc)), rc.progress.laps());
+    }
+
+    /**
+     * Whether a race that has reached the lights is on a track whose line (the links between its nodes) passes within {@code radius} blocks of
+     * {@code pos}: the spots near a track belong to it (docs/DESIGN_ITEMS.md).
+     */
+    public static boolean activeNear(ServerLevel level, BlockPos pos, double radius) {
+        double sq = radius * radius;
+        for (Race r : RACES.values()) {
+            if (r.phase != RacePayload.LIGHTS && r.phase != RacePayload.RACING) continue;
+            if (!r.key.dimension().equals(level.dimension())) continue;
+            if (TrackData.get(level).graph().distSqToTrack(r.key.start(), pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= sq) return true;
+        }
+        return false;
+    }
+
+    /** Whether a race on the track of this Start node has started (the lights are out): until then the grid and the gathering area stay shown. */
+    public static boolean raceRunning(ServerLevel level, long start) {
+        Race r = RACES.get(new Key(level.dimension(), start));
+        return r != null && r.phase == RacePayload.RACING;
+    }
+
     private static final Map<Key, Race> RACES = new HashMap<>();
     private static final Map<UUID, Race> BY_PLAYER = new HashMap<>();
     private static final Random RANDOM = new Random();
@@ -126,6 +160,35 @@ public final class RaceManager {
         if (r != null) end(level.getServer(), r, "message.ctrcraft.race.cancelled", false);
     }
 
+    /**
+     * Whether the player is in a race that has reached the lights and has not finished it: such a driver cannot get out of the kart by accident (sneak does nothing);
+     * the "leave race" key ({@link LeaveRacePayload}) is the way out.
+     */
+    public static boolean locked(UUID id) {
+        Race r = BY_PLAYER.get(id);
+        if (r == null || (r.phase != RacePayload.LIGHTS && r.phase != RacePayload.RACING)) return false;
+        Racer rc = r.racers.get(id);
+        return rc != null && !rc.out && rc.finishPlace == 0;
+    }
+
+    /** The driver chose to leave the race: out of it (the kart is theirs again). */
+    public static void forfeit(ServerPlayer p) {
+        if (!locked(p.getUUID())) return;
+        leave(p.getUUID());
+        PacketDistributor.sendToPlayer(p, RacePayload.off());
+        p.displayClientMessage(Component.translatable("message.ctrcraft.race.left"), true);
+    }
+
+    /** In a race a dismount (sneaking) is refused: leaving is a deliberate act, the held leave-race key. */
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.HIGHEST)
+    public static void onDismount(net.neoforged.neoforge.event.entity.EntityMountEvent event) {
+        if (event.isDismounting() && event.getEntityBeingMounted() instanceof KartEntity && event.getEntityMounting() instanceof ServerPlayer p
+                && !p.isRemoved() && p.isAlive() && locked(p.getUUID())) {
+            event.setCanceled(true);
+            if (p.tickCount % 40 == 0) p.displayClientMessage(Component.translatable("message.ctrcraft.race.leave_hint"), true);
+        }
+    }
+
     /** A racer logged out, left the dimension or the kart: out of the race. */
     public static void leave(UUID id) {
         Race r = BY_PLAYER.remove(id);
@@ -137,8 +200,8 @@ public final class RaceManager {
 
     private static boolean inArea(ServerPlayer p, BlockPos start, boolean manual) {
         if (!(p.getVehicle() instanceof KartEntity kart) || kart.getControllingPassenger() != p || (!manual && !kart.canStartRaces())) return false;
-        double r = CtrConfig.RACE_START_RADIUS.get();
-        return p.distanceToSqr(start.getX() + 0.5, start.getY() + 0.5, start.getZ() + 0.5) <= r * r;
+        TrackGraph.Node node = TrackData.get(p.serverLevel()).graph().get(start.asLong());
+        return node != null && GatherZone.contains(start.asLong(), node.rotation, p.getX(), p.getY(), p.getZ());
     }
 
     private static List<ServerPlayer> inArea(ServerLevel level, BlockPos start, boolean manual) {
@@ -149,7 +212,7 @@ public final class RaceManager {
 
     private static void broadcastGather(ServerLevel level, Race r, BlockPos start) {
         List<ServerPlayer> in = inArea(level, start, r.manual);
-        RacePayload payload = new RacePayload(RacePayload.GATHER, r.ticks, 0, r.laps, 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0, 0, in.size());
+        RacePayload payload = new RacePayload(RacePayload.GATHER, r.ticks, 0, r.laps, 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0, 0, in.size(), List.of(), List.of());
         for (ServerPlayer p : level.players()) {
             // everybody near sees the countdown, so drivers can find the area; those in it are counted
             if (inArea(p, start, r.manual) || p.distanceToSqr(start.getX(), start.getY(), start.getZ()) < 64 * 64) PacketDistributor.sendToPlayer(p, payload);
@@ -205,10 +268,11 @@ public final class RaceManager {
             rc.placeSeq = ++placeCounter;
             r.racers.put(p.getUUID(), rc);
             BY_PLAYER.put(p.getUUID(), r);
+            com.ctrcraft.pickup.ItemManager.reset(p);          // a new race starts with nothing in the kart
             put(level, p, rc);
         }
         r.phase = RacePayload.LIGHTS;
-        r.ticks = RaceGrid.LIGHTS_TICKS + 20;       // a second to settle on the grid before the first light
+        r.ticks = RaceGrid.INTRO_TICKS + RaceGrid.LIGHTS_TICKS + 20;       // the intro (jingle and camera pan), then a second to settle on the grid before the first light
         r.lastLights = 0;
         sendAll(level, r, 0);
     }
@@ -219,14 +283,14 @@ public final class RaceManager {
         BlockPos start = BlockPos.of(r.key.start());
         if (lit != r.lastLights) {
             r.lastLights = lit;
-            level.playSound(null, start, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1.0F, 0.6F);
+            if (lit > 0) level.playSound(null, start, ModSounds.LIGHT_COUNT.get(), SoundSource.PLAYERS, 1.2F, 1.0F);
             sendAll(level, r, 0);
         }
         if (r.ticks > 0) return;
         r.phase = RacePayload.RACING;
         r.goTick = level.getServer().getTickCount();
         for (Racer rc : r.racers.values()) rc.lapStartTick = r.goTick;
-        level.playSound(null, start, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1.2F, 1.5F);
+        level.playSound(null, start, ModSounds.LIGHT_GREEN.get(), SoundSource.PLAYERS, 1.5F, 1.0F);
         sendAll(level, r, 0);
     }
 
@@ -290,19 +354,16 @@ public final class RaceManager {
 
     // ---- starting by driving in: enter and exit tracking ----
 
-    /** Who is inside each Start node's sphere (a kart that may start races): entering is what can begin a race, so the sets are kept apart from any race. */
+    /** Who is inside each Start node's gathering box (a kart that may start races): entering is what can begin a race, so the sets are kept apart from any race. */
     private static final Map<Key, Set<UUID>> INSIDE = new HashMap<>();
 
     /** Updates the areas a kart's new position is in or out of. Runs on every report, but only compares against the Start nodes. */
     private static void trackAreas(ServerPlayer player, double x, double y, double z) {
         ServerLevel level = player.serverLevel();
         boolean can = player.getVehicle() instanceof KartEntity k && k.canStartRaces();
-        double r = CtrConfig.RACE_START_RADIUS.get();
         for (long start : TrackData.get(level).starts()) {
-            double dx = x - (NodeGeometry.x(start) + 0.5);
-            double dy = y - (NodeGeometry.y(start) + 0.5);
-            double dz = z - (NodeGeometry.z(start) + 0.5);
-            boolean in = can && dx * dx + dy * dy + dz * dz <= r * r;
+            TrackGraph.Node node = TrackData.get(level).graph().get(start);
+            boolean in = can && node != null && GatherZone.contains(start, node.rotation, x, y, z);
             Key key = new Key(level.dimension(), start);
             Set<UUID> set = INSIDE.computeIfAbsent(key, k -> new HashSet<>());
             if (in) {
@@ -353,6 +414,7 @@ public final class RaceManager {
         int lapMs = (now - rc.lapStartTick) * TICK_MS;
         rc.lapStartTick = now;
         rc.lastLapMs = lapMs;
+        rc.lapTimes.add(lapMs);
         rc.bestLapMs = rc.bestLapMs == 0 ? lapMs : Math.min(rc.bestLapMs, lapMs);
         if (rc.progress.laps() >= r.laps) {
             rc.finishPlace = ++r.finished;
@@ -402,12 +464,20 @@ public final class RaceManager {
         int phase = rc.finishPlace != 0 ? RacePayload.DONE : r.phase;
         int lap = Math.min(r.laps, rc.progress.laps() + 1);
         PacketDistributor.sendToPlayer(p, new RacePayload(phase, r.ticks, r.lastLights, r.laps, lap, place, r.racers.size(), timeMs, rc.lastLapMs,
-                rc.bestLapMs, hold, rc.placeSeq, rc.slot.x(), rc.slot.y(), rc.slot.z(), rc.slot.yaw(), rc.finishPlace, 0));
+                rc.bestLapMs, hold, rc.placeSeq, rc.slot.x(), rc.slot.y(), rc.slot.z(), rc.slot.yaw(), rc.finishPlace, 0,
+                rank.stream().limit(4).map(o -> o.id).toList(), List.copyOf(rc.lapTimes)));
+    }
+
+    /** An id for the race the player is in (its track), or null. */
+    public static String raceIdOf(UUID id) {
+        Race r = BY_PLAYER.get(id);
+        return r == null ? null : r.key.dimension().location() + "@" + r.key.start();
     }
 
     private static void end(MinecraftServer server, Race r, String reasonKey, boolean results) {
         RACES.remove(r.key);
         ServerLevel level = server.getLevel(r.key.dimension());
+        if (level != null) com.ctrcraft.pickup.MinePool.clearRace(r.key.dimension().location() + "@" + r.key.start(), level);
         List<Racer> rank = ranking(r);
         for (Racer rc : r.racers.values()) {
             BY_PLAYER.remove(rc.id);
@@ -450,5 +520,6 @@ public final class RaceManager {
         }
         BY_PLAYER.clear();
         INSIDE.clear();
+        com.ctrcraft.pickup.MinePool.clearAll();
     }
 }

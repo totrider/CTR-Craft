@@ -108,8 +108,8 @@ def main():
     lang = json.load(open(lp, encoding="utf-8")) if os.path.exists(lp) else {}
     lang[f"item.{NS}.kart"] = "Kart"
     lang[f"entity.{NS}.kart"] = "Kart"
-    lang[f"itemGroup.{NS}"] = "Crash Team Racing Craft"
-    lang["key.categories.ctrcraft"] = "CTR Craft"
+    lang[f"itemGroup.{NS}"] = "Craft Team Racing"
+    lang["key.categories.ctrcraft"] = "Craft Team Racing"
     lang["key.ctrcraft.hop2"] = "Hop / Boost (second shoulder)"
     lang["key.ctrcraft.brake"] = "Brake"
     dump(lp, lang)

@@ -26,17 +26,29 @@ public class CtrCraftMod {
         modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER, CtrConfig.SPEC);
         ModCreativeTabs.register(modEventBus);
         modEventBus.addListener(CtrCraftMod::registerPayloads);
-        LOGGER.info("CTR Craft loaded");
+        ModBlockEntities.register(modEventBus);
+        ModParticles.register(modEventBus);
+        LOGGER.info("Craft Team Racing loaded");
     }
 
     private static void registerPayloads(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar("1");
         registrar.playToServer(KartStatePayload.TYPE, KartStatePayload.STREAM_CODEC, KartStatePayload::handle);
         registrar.playToServer(KartDismountPayload.TYPE, KartDismountPayload.STREAM_CODEC, KartDismountPayload::handle);
+        registrar.playToClient(com.ctrcraft.pickup.ItemStatePayload.TYPE, com.ctrcraft.pickup.ItemStatePayload.STREAM_CODEC,
+                com.ctrcraft.pickup.ItemStatePayload::handle);
+        registrar.playToServer(com.ctrcraft.pickup.UseItemPayload.TYPE, com.ctrcraft.pickup.UseItemPayload.STREAM_CODEC,
+                com.ctrcraft.pickup.UseItemPayload::handle);
+        registrar.playToServer(com.ctrcraft.net.KartHitPayload.TYPE, com.ctrcraft.net.KartHitPayload.STREAM_CODEC,
+                com.ctrcraft.net.KartHitPayload::handle);
         registrar.playToClient(com.ctrcraft.track.TrackSnapshotPayload.TYPE, com.ctrcraft.track.TrackSnapshotPayload.STREAM_CODEC,
                 com.ctrcraft.track.TrackSnapshotPayload::handle);
         registrar.playToClient(com.ctrcraft.track.TestDrivePayload.TYPE, com.ctrcraft.track.TestDrivePayload.STREAM_CODEC,
                 com.ctrcraft.track.TestDrivePayload::handle);
+        registrar.playToServer(com.ctrcraft.track.LeaveRacePayload.TYPE, com.ctrcraft.track.LeaveRacePayload.STREAM_CODEC,
+                com.ctrcraft.track.LeaveRacePayload::handle);
+        registrar.playToServer(com.ctrcraft.pickup.TntShakePayload.TYPE, com.ctrcraft.pickup.TntShakePayload.STREAM_CODEC,
+                com.ctrcraft.pickup.TntShakePayload::handle);
         registrar.playToServer(com.ctrcraft.track.RespawnPayload.TYPE, com.ctrcraft.track.RespawnPayload.STREAM_CODEC,
                 com.ctrcraft.track.RespawnPayload::handle);
         registrar.playToServer(com.ctrcraft.track.TrackBoxPayload.TYPE, com.ctrcraft.track.TrackBoxPayload.STREAM_CODEC,

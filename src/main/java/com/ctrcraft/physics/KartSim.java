@@ -200,6 +200,12 @@ public final class KartSim {
     private int jumpForced;
     private int airtime;
     private int jumpMeter;
+    /** The speedometer needle's smoothed value ({@link Speedometer}) and the game's frame counter that feeds it. */
+    private int needle;
+    private int frameCounter;
+    /** UI_JumpMeter_Update: the hang-time meter as the HUD shows it, kept for UI_JUMP_METER_DISPLAY_TIMER (0x5A0 ms) after landing. */
+    private int jumpShown;
+    private int jumpShownTimer;
     private int jumpVel = JUMP_FORCE;
     private int fall;
 
@@ -242,6 +248,13 @@ public final class KartSim {
     private int engineVolumeOut = 0x82;
 
     private final List<KartEvent> events = new ArrayList<>();
+    /** The other karts near this one, for the next tick's bump (the host sets them; see {@link KartBump}). */
+    private List<KartBump.Other> others = List.of();
+    private int bumpSoundCooldown;
+    private final List<Bump> bumps = new ArrayList<>();
+
+    /** A contact this tick: with the other body {@code id} (see {@link KartBump.Other}), how hard, and the normal (other to this kart). */
+    public record Bump(int id, int impact, V3 normal) {}
 
     /** A kart standing at {@code position} (lu), facing {@code heading} (4096ths; forward is (sin h, 0, cos h)). */
     public KartSim(KartClass kartClass, V3 position, int heading) {
@@ -260,6 +273,9 @@ public final class KartSim {
     public KartClass kartClass() { return kartClass; }
     public void setKartClass(KartClass c) { this.kartClass = c; }
     public V3 position() { return pos; }
+
+    /** The other karts (position lu, velocity lu/256 per frame) the next tick may bump into. */
+    public void setOthers(List<KartBump.Other> others) { this.others = others; }
     public V3 velocity() { return vel; }
     /** Physics heading, 4096ths of a turn. */
     public int heading() { return angle; }
@@ -322,6 +338,20 @@ public final class KartSim {
     }
 
     /** The hang-time meter (CTR-ms of airtime, up to 2400) while a hop's airtime counts for it, else -1. */
+    /** The speedometer needle's value (a smoothed forward speed, as the game's HUD uses it). */
+    public int speedometerNeedle() { return needle; }
+
+    /** The dial's needle angle in 4096ths of a turn, see {@link Speedometer#angle}. */
+    public int speedometerAngle() { return Speedometer.angle(needle, accelSpeed(), SACRED_FIRE_SPEED); }
+
+    /** The hang-time meter as the HUD draws it: the airtime so far, held for 0x5A0 ms after landing, then 0 (up to 0x960). */
+    public int jumpMeterShown() { return jumpShown; }
+
+    /** The powerslide meter's room left in CTR-ms (turbo_MeterRoomLeft, 0 when no slide), its maximum and the point under which it is in the red zone. */
+    public int slideMeterRoomLeft() { return state == State.DRIFTING ? turboMeter : 0; }
+    public static int slideMeterMaxRoom() { return TURBO_MAX_ROOM_MS; }
+    public static int slideMeterLowRoom() { return TURBO_LOW_ROOM_MS; }
+
     public int hangTimeMeter() {
         return (flags & AIRBORNE) != 0 && !grounded() ? jumpMeter : -1;
     }
@@ -336,6 +366,13 @@ public final class KartSim {
         if (state != State.DRIFTING || turboMeter == 0) return null;
         double fill = 1.0 - (double) turboMeter / TURBO_MAX_ROOM_MS;
         return new double[] { fill, turboMeter < TURBO_LOW_ROOM_MS ? 1 : 0 };
+    }
+
+    /** The bodies bumped since the last call (for the host's own consequences, such as damage); clears them. */
+    public List<Bump> drainBumps() {
+        List<Bump> out = new ArrayList<>(bumps);
+        bumps.clear();
+        return out;
     }
 
     /** Events since the last call; clears them. */
@@ -392,18 +429,90 @@ public final class KartSim {
         }
     }
 
+    /**
+     * The Turbo power-up (VehPickupItem_ShootNow): {@code VehFire_Increment(0x960 reserves, FREEZE type, fire level 0x80)}, 0x100 with ten
+     * wumpa (TURBO_ITEM_RESERVES, TURBO_ITEM_BOOST_NORMAL / _JUICED).
+     */
+    public void itemTurbo(boolean juiced) {
+        if (fireIncrement(0x960, FireKind.FREEZE, juiced ? 0x100 : 0x80)) {
+            events.add(new KartEvent(KartEvent.Type.BOOST, 2));
+        }
+    }
+
+    /** The red beaker's rain cloud over the kart (RAIN_CLOUD_EFFECT_*, 7.68 s): only what the sim has a place for is applied (jump lockout, ice). */
+    public static final int CLOUD_SLOW = 0;
+    public static final int CLOUD_ITEM_ROLL = 1;
+    public static final int CLOUD_ICE = 2;
+    public static final int CLOUD_JUMP_LOCKOUT = 3;
+    private int cloudMs;
+    private int cloudEffect = -1;
+
+    public void setCloud(int effect, int ms) {
+        cloudEffect = effect;
+        cloudMs = ms;
+    }
+
+    public boolean cloudActive() {
+        return cloudMs > 0;
+    }
+
+    public boolean cloudIce() {
+        return cloudMs > 0 && cloudEffect == CLOUD_ICE;
+    }
+
+    /** A beaker hit the kart (damage type 1, VEH_PICK_DAMAGE_SPIN): it spins out. */
+    public void itemSpin() {
+        spinOut(SPIN_MS);
+    }
+
+    /** How long the kart still tumbles, ms: VEH_PICK_BLAST_NO_INPUT_TIMER is 0x960. */
+    private int tumbleMs;
+    /** The tumble's bounces are not hops: no hang time meter and no boost from them until the kart is back on the ground for good (VehFire_Increment refuses a blasted kart). */
+    private boolean tumbleGuard;
+
+    /** For the renderer: 0 when not tumbling, else 64 | the frame (0 to 26) of the blasted animation: VehStuckProc_Tumble_Animate, (time left / 32 ms) mod 27. */
+    public int tumbleCode() {
+        return tumbleMs > 0 ? 64 | ((tumbleMs >> 5) % 27) : 0;
+    }
+
+    /**
+     * An explosion of a power-up (TNT, Nitro) hit the kart: VehStuckProc_Tumble. For 2.4 s it has no input, no speed and no boost, and jumps again and again, each bounce
+     * lower than the one before (the jump velocity is twice the time left plus 6000), while it whirls about its own axis. (CTR plays a baked tumbling animation of the
+     * kart's model; the whirl is the nearest the model here has.)
+     */
+    public void itemBlast() {
+        tumbleGuard = true;
+        tumbleMs = 0x960;
+        spinOut(0x960);
+    }
+
     // ---- tick ----
 
     /** One 30 Hz frame. */
     public void tick(Collider world, KartInput input) {
         boolean tappedR1 = input.r1() && !prevR1;
         boolean tappedL1 = input.l1() && !prevL1;
+        if (cloudMs > 0) {
+            cloudMs = Math.max(0, cloudMs - MS);
+            if (cloudEffect == CLOUD_JUMP_LOCKOUT) {      // RAIN_CLOUD_EFFECT_JUMP_LOCKOUT: the jump button does nothing
+                tappedR1 = false;
+                tappedL1 = false;
+            }
+        }
         prevR1 = input.r1();
         prevL1 = input.l1();
         boolean tapped = tappedR1 || tappedL1;
 
         updateStage(input, tapped);
         physLinear(input, tappedR1, tappedL1);
+        if (tumbleMs > 0) {
+            tumbleMs = Math.max(0, tumbleMs - MS);
+            flags |= ACCEL_PREVENTION;            // ... and the brake friction applies (ACTION_ACCEL_PREVENTION)
+            baseSpeed = 0;                        // (driver->speed stays: it carries the bounce between frames; friction takes the rest)
+            fireSpeed = 0;
+            jumpForced = JUMP_FORCED_MS;          // VehStuckProc_Tumble_PhysLinear: jump_ForcedMS 0x60 every frame ...
+            jumpVel = tumbleMs * 2 + 6000;         // ... with this initial velocity
+        }
         switch (state) {
             case DRIFTING -> powerslideAngular();
             case SPINNING -> spinAngular();
@@ -414,8 +523,10 @@ public final class KartSim {
         n1 = V3.UP;
         sweep(world);
         vel = vel.sub(nudge);
+        bump();
         groundProbe(world);
         jumpAndFriction();
+        needle = Speedometer.step(needle, speedApprox, frameCounter++);
         // TRANSLATE_MATRIX: the visual frame.
         double w = grounded() ? 6.0 : 7.0;
         V3 target = grounded() ? n1 : V3.UP;
@@ -987,7 +1098,8 @@ public final class KartSim {
         ly = Math.max(ly, Math.min(l0.y, -TERMINAL_VELOCITY));
         l = new V3(lx, ly, lz);
         boolean slowDrag = speedApprox > terrainBase && speedTerrain.speed() < 256;
-        if ((flagsPrev & TOUCH_GROUND) != 0 || slowDrag) l = friction(l);
+        // VehPhysForce_OnApplyForces: a blasted kart is rubbed even in the air (the tumble's bounces would otherwise carry the kart's speed on)
+        if ((flagsPrev & TOUCH_GROUND) != 0 || slowDrag || tumbleMs > 0) l = friction(l);
         if (Math.abs(l.z) > 64) forwardDir = l.z >= 0 ? 1 : -1;
         vel = moving.mul(l).add(nudge);
     }
@@ -1004,7 +1116,8 @@ public final class KartSim {
         int perp;
         int fwd;
         if ((flags & ACCEL_PREVENTION) != 0) {
-            int f = state == State.SPINNING ? BRAKE_FRICTION / 2 : BRAKE_FRICTION;
+            // a blasted kart brakes with three quarters of the brake friction (KS_BLASTED), a spinning one with half
+            int f = tumbleMs > 0 ? (BRAKE_FRICTION * 3) >> 2 : state == State.SPINNING ? BRAKE_FRICTION / 2 : BRAKE_FRICTION;
             perp = f;
             fwd = f;
         } else if (baseSpeed != 0) {
@@ -1106,6 +1219,20 @@ public final class KartSim {
             speed = 0;
             reserves = 0;
             turboMeter = 0;
+        }
+    }
+
+    /** VehPhysForce_CollideDrivers' kart search, between COLL_MOVED and the speed being rebuilt from the velocity. */
+    private void bump() {
+        if (bumpSoundCooldown > 0) bumpSoundCooldown--;
+        if (others.isEmpty()) return;
+        KartBump.Result r = KartBump.resolve(pos, vel, KartBump.weight(kartClass), others);
+        if (!r.hit()) return;
+        vel = r.vel();
+        if (r.impact() > 0) bumps.add(new Bump(r.id(), r.impact(), r.normal()));
+        if (r.impact() > KartBump.FEEDBACK_MIN_IMPACT && bumpSoundCooldown == 0) {
+            events.add(new KartEvent(KartEvent.Type.BUMP, KartBump.volume(r.impact())));
+            bumpSoundCooldown = KartBump.FEEDBACK_COOLDOWN_FRAMES;
         }
     }
 
@@ -1284,10 +1411,24 @@ public final class KartSim {
 
     /** UI_JumpMeter_Update (UI_Meter.c:59-121, spec 6.6): the hang-time boost. */
     private void hangTime() {
+        if (tumbleGuard) {
+            if (tumbleMs == 0 && grounded()) tumbleGuard = false;
+            jumpMeter = 0;
+            jumpShown = 0;
+            flags &= ~AIRBORNE;
+            return;
+        }
         boolean airborne = (flags & AIRBORNE) != 0;
         if (airborne && !grounded()) {
             jumpMeter = Math.min(airtime, HANG_TIME_METER_MAX);
+            jumpShown = jumpMeter;
+            jumpShownTimer = 0x5A0;
             return;
+        }
+        if (jumpShownTimer > 0) {
+            jumpShownTimer = Math.max(0, jumpShownTimer - MS);
+        } else {
+            jumpShown = 0;
         }
         if (airborne) {
             flags &= ~AIRBORNE;

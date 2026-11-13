@@ -10,12 +10,19 @@ public final class TrackClient {
 
     private static volatile List<TrackSnapshotPayload.NodeView> nodes = List.of();
     private static volatile Map<Long, TrackSnapshotPayload.NodeView> byPos = Map.of();
+    private static volatile long[] gridStarts = new long[0];
 
     static void update(TrackSnapshotPayload payload) {
         Map<Long, TrackSnapshotPayload.NodeView> map = new java.util.HashMap<>();
         for (TrackSnapshotPayload.NodeView n : payload.nodes()) map.put(n.pos(), n);
         byPos = Collections.unmodifiableMap(map);
         nodes = List.copyOf(payload.nodes());
+        gridStarts = payload.gridStarts();
+    }
+
+    /** The Start nodes whose grid and gathering area are drawn even with nothing in hand (a finished track nobody is racing on). */
+    public static long[] gridStarts() {
+        return gridStarts;
     }
 
     public static List<TrackSnapshotPayload.NodeView> nodes() {
@@ -29,5 +36,6 @@ public final class TrackClient {
     public static void clear() {
         nodes = List.of();
         byPos = Map.of();
+        gridStarts = new long[0];
     }
 }

@@ -39,7 +39,7 @@ run/
 repo/
 !**/src/**/repo/
 
-### CTR Craft ###
+### Craft Team Racing ###
 # local tool config with absolute paths
 .mcp.json
 # Krita backup/autosave files
@@ -52,6 +52,7 @@ reference/
 
 # the user's own game image and anything extracted from it: never committed or shipped
 CTR - Crash Team Racing*/
+CTR Source/
 *.bin
 *.cue
 *.iso

@@ -68,5 +68,105 @@
     "sounds": [
       "ctrcraft:spin_out"
     ]
+  },
+  "light_count": {
+    "sounds": [
+      "ctrcraft:light_count"
+    ]
+  },
+  "light_green": {
+    "sounds": [
+      "ctrcraft:light_green"
+    ]
+  },
+  "fruit_pickup": {
+    "sounds": [
+      "ctrcraft:fruit_pickup"
+    ]
+  },
+  "glass_shatter": {
+    "sounds": [
+      "ctrcraft:glass_shatter"
+    ]
+  },
+  "mine_drop": {
+    "sounds": [
+      "ctrcraft:mine_drop"
+    ]
+  },
+  "tnt_hit": {
+    "sounds": [
+      "ctrcraft:tnt_hit"
+    ]
+  },
+  "tnt_land": {
+    "sounds": [
+      "ctrcraft:tnt_land"
+    ]
+  },
+  "tnt_tick": {
+    "sounds": [
+      "ctrcraft:tnt_tick"
+    ]
+  },
+  "tnt_explode": {
+    "sounds": [
+      "ctrcraft:tnt_explode"
+    ]
+  },
+  "crate_break": {
+    "sounds": [
+      "ctrcraft:crate_break"
+    ]
+  },
+  "item_roll": {
+    "sounds": [
+      "ctrcraft:item_roll"
+    ]
+  },
+  "item_get": {
+    "sounds": [
+      "ctrcraft:item_get"
+    ]
+  },
+  "item_get_juiced": {
+    "sounds": [
+      "ctrcraft:item_get_juiced"
+    ]
+  },
+  "crash_soft": {
+    "sounds": [
+      "ctrcraft:crash_soft"
+    ]
+  },
+  "crash_mid": {
+    "sounds": [
+      "ctrcraft:crash_mid"
+    ]
+  },
+  "crash_hard": {
+    "sounds": [
+      "ctrcraft:crash_hard"
+    ]
+  },
+  "fruit_arrive": {
+    "sounds": [
+      "ctrcraft:fruit_arrive"
+    ]
+  },
+  "music.race_intro": {
+    "sounds": []
+  },
+  "music.race": {
+    "sounds": []
+  },
+  "music.final_lap": {
+    "sounds": []
+  },
+  "music.race_end.first": {
+    "sounds": []
+  },
+  "music.race_end.other": {
+    "sounds": []
   }
 }

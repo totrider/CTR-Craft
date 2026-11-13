@@ -109,10 +109,14 @@ class RaceProgressTest {
 
     @Test
     void theLightsComeOnOneByOneAndStayUntilGo() {
+        // DotLights.c: red lamps at 2880, 1920 and 960 ms left, the green (GO) at 0
         assertEquals(0, RaceGrid.lightsLit(RaceGrid.LIGHTS_TICKS + 5));
-        assertEquals(1, RaceGrid.lightsLit(RaceGrid.LIGHTS_TICKS));
-        assertEquals(2, RaceGrid.lightsLit(RaceGrid.LIGHTS_TICKS - RaceGrid.LIGHT_SPACING_TICKS));
-        assertEquals(3, RaceGrid.lightsLit(RaceGrid.LIGHTS_TICKS - 2 * RaceGrid.LIGHT_SPACING_TICKS));
+        assertEquals(0, RaceGrid.lightsLit(58));
+        assertEquals(1, RaceGrid.lightsLit(57));
+        assertEquals(1, RaceGrid.lightsLit(39));
+        assertEquals(2, RaceGrid.lightsLit(38));
+        assertEquals(2, RaceGrid.lightsLit(20));
+        assertEquals(3, RaceGrid.lightsLit(19));
         assertEquals(3, RaceGrid.lightsLit(1));
     }
 
@@ -122,9 +126,60 @@ class RaceProgressTest {
         RaceGrid.Slot pole = RaceGrid.slot(start, 12, 0);      // the node faces east: the grid is to its west
         assertTrue(pole.x() < 100.5, "behind: west of the node");
         assertEquals(270.0F, pole.yaw());
-        RaceGrid.Slot row2 = RaceGrid.slot(start, 12, 2);
-        assertTrue(row2.x() < pole.x(), "the second row is further back");
         RaceGrid.Slot second = RaceGrid.slot(start, 12, 1);
-        assertTrue(second.x() < pole.x() && second.z() != pole.z(), "staggered and beside");
+        assertEquals(pole.x(), second.x(), 0.3, "the second kart is beside the first, in the same row");
+        assertEquals(3.77, Math.abs(second.z() - pole.z()), 0.02, "3.8 blocks along the row");
+        RaceGrid.Slot fifth = RaceGrid.slot(start, 12, 4);
+        assertEquals(5.0, pole.x() - fifth.x(), 0.2, "the second row is about 5 blocks further back");
+    }
+
+    @Test
+    void theGridIsTheOriginalTwoRowsOfFourAndRepeatsBehind() {
+        long start = NodeGeometry.pack(100, 64, 100);
+        RaceGrid.Slot pole = RaceGrid.slot(start, 12, 0);
+        RaceGrid.Slot last = RaceGrid.slot(start, 12, 3);
+        assertEquals(11.31, Math.abs(pole.z() - last.z()), 0.02, "four karts a row, 3.8 blocks apart");
+        // the 9th racer starts the pattern again behind the 8th
+        RaceGrid.Slot ninth = RaceGrid.slot(start, 12, 8);
+        assertTrue(ninth.x() < RaceGrid.slot(start, 12, 7).x(), "behind the last of the first eight");
+        assertEquals(pole.z(), ninth.z(), 1e-9);
+        // the whole pattern fits the gathering box
+        for (int i = 0; i < 8; i++) {
+            RaceGrid.Slot s = RaceGrid.slot(start, 12, i);
+            assertTrue(GatherZone.contains(start, 12, s.x(), s.y() + 0.5, s.z()), "slot " + i + " is inside the gathering area");
+        }
+    }
+
+    /** A branch across the start line on a course of four nodes: which end it is entered from follows the length of the stretch it replaces, not the node count. */
+    @Test
+    void aBranchAcrossTheStartLineIsEnteredFromTheNodeBeforeIt() {
+        long s = TestDriveTest.at(0, 0);
+        long a = TestDriveTest.at(100, 0);
+        long b = TestDriveTest.at(100, 40);
+        long c = TestDriveTest.at(0, 20);
+        long y = TestDriveTest.at(50, -10);
+        TrackGraph g = new TrackGraph();
+        g.put(s, TrackGraph.Kind.START, 12);
+        g.put(a, TrackGraph.Kind.CHECKPOINT, 0);
+        g.put(b, TrackGraph.Kind.CHECKPOINT, 4);
+        g.put(c, TrackGraph.Kind.CHECKPOINT, 8);
+        g.put(y, TrackGraph.Kind.CHECKPOINT, 12);
+        g.toggleLink(s, a);
+        g.toggleLink(a, b);
+        g.toggleLink(b, c);
+        g.toggleLink(c, s);
+        g.toggleLink(a, y);
+        g.toggleLink(y, c);
+        TrackRoutes r = new TrackRoutes();
+        r.setMain(java.util.List.of(s, a, b, c, s));
+        r.addBranch(new TrackRoutes.Branch(a, c, new long[] { y }));       // recorded the way the course does not go
+        RaceProgress p = new RaceProgress(g, r);
+        p.reach(a);
+        p.reach(b);
+        p.reach(c);
+        assertTrue(p.expected().contains(y), "at C the branch over the start line is one of the ways on");
+        assertEquals(Kind.NODE, p.reach(y).kind());
+        assertEquals(Kind.LAP, p.reach(a).kind(), "it rejoins at A, past the start line: the lap counts");
+        assertEquals(1, p.laps());
     }
 }

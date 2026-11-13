@@ -26,6 +26,9 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.TRACK_TOOL.get());
                         output.accept(ModBlocks.START_NODE_ITEM.get());
                         output.accept(ModBlocks.CHECKPOINT_NODE_ITEM.get());
+                        output.accept(ModBlocks.FRUIT_SPOT_ITEM.get());
+                        output.accept(ModBlocks.FRUIT_CRATE_SPOT_ITEM.get());
+                        output.accept(ModBlocks.POWERUP_CRATE_SPOT_ITEM.get());
                     })
                     .build());
 

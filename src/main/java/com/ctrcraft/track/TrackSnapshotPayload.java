@@ -13,9 +13,10 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * The track nodes of the player's dimension, sent to a player who is holding a track item so the client can draw the ghosts. Resent
- * when the graph changes. {@code version} is the server's graph version, for the sender's bookkeeping.
+ * when the graph changes. {@code version} is the server's graph version, for the sender's bookkeeping. {@code gridStarts} are the Start nodes
+ * whose start grid is shown even without a track item in hand: the track is complete and no race is on it.
  */
-public record TrackSnapshotPayload(int version, List<NodeView> nodes) implements CustomPacketPayload {
+public record TrackSnapshotPayload(int version, List<NodeView> nodes, long[] gridStarts) implements CustomPacketPayload {
     public static final Type<TrackSnapshotPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(CtrCraftMod.MODID, "track_snapshot"));
 
@@ -33,14 +34,14 @@ public record TrackSnapshotPayload(int version, List<NodeView> nodes) implements
         return TYPE;
     }
 
-    public static TrackSnapshotPayload of(TrackGraph graph) {
+    public static TrackSnapshotPayload of(TrackGraph graph, long[] gridStarts) {
         List<NodeView> out = new ArrayList<>();
         for (var e : graph.nodes().entrySet()) {
             if (out.size() >= MAX_NODES) break;
             TrackGraph.Node n = e.getValue();
             out.add(new NodeView(e.getKey(), n.kind, n.rotation, n.ext.clone(), n.links().stream().mapToLong(Long::longValue).toArray()));
         }
-        return new TrackSnapshotPayload(graph.version(), out);
+        return new TrackSnapshotPayload(graph.version(), out, gridStarts);
     }
 
     private static void write(RegistryFriendlyByteBuf b, TrackSnapshotPayload p) {
@@ -54,6 +55,8 @@ public record TrackSnapshotPayload(int version, List<NodeView> nodes) implements
             b.writeVarInt(n.links().length);
             for (long l : n.links()) b.writeLong(l);
         }
+        b.writeVarInt(p.gridStarts.length);
+        for (long s : p.gridStarts) b.writeLong(s);
     }
 
     private static TrackSnapshotPayload read(RegistryFriendlyByteBuf b) {
@@ -71,7 +74,9 @@ public record TrackSnapshotPayload(int version, List<NodeView> nodes) implements
             for (int k = 0; k < links; k++) l[k] = b.readLong();
             nodes.add(new NodeView(pos, TrackGraph.Kind.values()[kind], rotation, ext, l));
         }
-        return new TrackSnapshotPayload(version, nodes);
+        long[] grid = new long[Math.min(b.readVarInt(), 256)];
+        for (int i = 0; i < grid.length; i++) grid[i] = b.readLong();
+        return new TrackSnapshotPayload(version, nodes, grid);
     }
 
     public static void handle(TrackSnapshotPayload payload, IPayloadContext context) {

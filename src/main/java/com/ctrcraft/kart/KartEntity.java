@@ -126,16 +126,32 @@ public class KartEntity extends Entity {
             if (getEngineData() != 0x823C) {
                 setEngineData(0x823C);
             }
-            if (getTilt() != TILT_FLAT) {
-                setTilt(TILT_FLAT);
+            if (restTilted) {
+                // asleep on a slope: nothing to compute until the blocks under it change (looked at about once a second)
+                if (tickCount % 20 == 0 && com.ctrcraft.pickup.GroundTilt.signature(level(), getX(), getY(), getZ()) != restSignature) restTilted = false;
+                return;
             }
             // fall, stop
             Vec3 dm = getDeltaMovement().add(0, -0.04, 0);
             setDeltaMovement(dm.x * 0.6, dm.y * 0.98, dm.z * 0.6);
             move(MoverType.SELF, getDeltaMovement());
+            // an empty kart that has come to rest lies on the slope it is on (the driver's tilt would otherwise snap back to flat), flat on the slope's plane, once
+            if (onGround() && getDeltaMovement().lengthSqr() < 1.0E-4) {
+                restTilted = true;
+                com.ctrcraft.pickup.GroundTilt.Rest r = com.ctrcraft.pickup.GroundTilt.rest(level(), this, getX(), getY(), getZ());
+                setTilt(r.tilt());
+                setPos(getX(), r.y(), getZ());
+                restSignature = com.ctrcraft.pickup.GroundTilt.signature(level(), getX(), getY(), getZ());
+            } else if (getTilt() != TILT_FLAT) {
+                setTilt(TILT_FLAT);
+            }
+        } else {
+            restTilted = false;
         }
     }
 
+    private boolean restTilted;
+    private int restSignature;
     private int rejectedMoves;
 
     /** Server: counts a driver report that was refused; returns how many in a row. */
@@ -176,6 +192,13 @@ public class KartEntity extends Entity {
         lerpZ = z;
         lerpYRot = yRot;
         lerpSteps = Math.max(steps, 1);
+    }
+
+    /** What the kart carries (wumpa fruit and the held power-up, {@link com.ctrcraft.pickup.ItemManager}): it stays with the kart when the driver gets out. */
+    private final com.ctrcraft.pickup.ItemManager.State items = new com.ctrcraft.pickup.ItemManager.State();
+
+    public com.ctrcraft.pickup.ItemManager.State items() {
+        return items;
     }
 
     /** Whether driving this kart into a Start node's area can start a race (the Wrench switches it). Kept on the server. */
@@ -300,11 +323,15 @@ public class KartEntity extends Entity {
     protected void readAdditionalSaveData(CompoundTag tag) {
         setDrawnYawAngle(tag.getInt("DrawnYaw"));
         canStartRaces = !tag.contains("CanStartRaces") || tag.getBoolean("CanStartRaces");
+        items.wumpa = Math.max(0, Math.min(com.ctrcraft.pickup.ItemManager.MAX_WUMPA, tag.getInt("Wumpa")));
+        items.held = tag.getString("HeldPowerup");
     }
 
     @Override
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putInt("DrawnYaw", getDrawnYawAngle());
         tag.putBoolean("CanStartRaces", canStartRaces);
+        tag.putInt("Wumpa", items.wumpa);
+        tag.putString("HeldPowerup", items.held);
     }
 }

@@ -25,6 +25,23 @@ public final class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> WALL_HIT = reg("wall_hit");
     public static final DeferredHolder<SoundEvent, SoundEvent> SLAM = reg("slam");
     public static final DeferredHolder<SoundEvent, SoundEvent> SPIN_OUT = reg("spin_out");
+    public static final DeferredHolder<SoundEvent, SoundEvent> LIGHT_COUNT = reg("light_count");
+    public static final DeferredHolder<SoundEvent, SoundEvent> LIGHT_GREEN = reg("light_green");
+    public static final DeferredHolder<SoundEvent, SoundEvent> FRUIT_PICKUP = reg("fruit_pickup");
+    public static final DeferredHolder<SoundEvent, SoundEvent> FRUIT_ARRIVE = reg("fruit_arrive");
+    public static final DeferredHolder<SoundEvent, SoundEvent> GLASS_SHATTER = reg("glass_shatter");
+    public static final DeferredHolder<SoundEvent, SoundEvent> MINE_DROP = reg("mine_drop");
+    public static final DeferredHolder<SoundEvent, SoundEvent> TNT_HIT = reg("tnt_hit");
+    public static final DeferredHolder<SoundEvent, SoundEvent> TNT_LAND = reg("tnt_land");
+    public static final DeferredHolder<SoundEvent, SoundEvent> TNT_TICK = reg("tnt_tick");
+    public static final DeferredHolder<SoundEvent, SoundEvent> TNT_EXPLODE = reg("tnt_explode");
+    public static final DeferredHolder<SoundEvent, SoundEvent> CRATE_BREAK = reg("crate_break");
+    public static final DeferredHolder<SoundEvent, SoundEvent> ITEM_ROLL = reg("item_roll");
+    public static final DeferredHolder<SoundEvent, SoundEvent> ITEM_GET = reg("item_get");
+    public static final DeferredHolder<SoundEvent, SoundEvent> ITEM_GET_JUICED = reg("item_get_juiced");
+    public static final DeferredHolder<SoundEvent, SoundEvent> CRASH_SOFT = reg("crash_soft");
+    public static final DeferredHolder<SoundEvent, SoundEvent> CRASH_MID = reg("crash_mid");
+    public static final DeferredHolder<SoundEvent, SoundEvent> CRASH_HARD = reg("crash_hard");
 
     private ModSounds() {}
 

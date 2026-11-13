@@ -310,7 +310,7 @@ def write_fusion(preview=False):
     # the mod's own pack.mcmeta: tells Fusion where the optional files are (it reads it for every mod). The formats cover resources
     # (34) and data (48) of 1.21.1 so the mod's pack is never flagged
     dump(os.path.join(RES, "pack.mcmeta"), {
-        "pack": {"description": "Crash Team Racing Craft", "pack_format": 34,
+        "pack": {"description": "Craft Team Racing", "pack_format": 34,
                  "supported_formats": {"min_inclusive": 34, "max_inclusive": 48}},
         "fusion": {"overrides_folder": "fusion-overrides"}})
     if preview:

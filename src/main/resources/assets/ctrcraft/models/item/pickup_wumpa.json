@@ -1,0 +1,406 @@
+{
+  "textures": {
+    "pickups": "ctrcraft:item/pickups",
+    "particle": "ctrcraft:item/pickups"
+  },
+  "elements": [
+    {
+      "from": [
+        5.5,
+        1,
+        5.5
+      ],
+      "to": [
+        10.5,
+        5,
+        10.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            8,
+            10.5,
+            10
+          ],
+          "texture": "#pickups"
+        },
+        "east": {
+          "uv": [
+            8,
+            8,
+            10.5,
+            10
+          ],
+          "texture": "#pickups"
+        },
+        "south": {
+          "uv": [
+            8,
+            8,
+            10.5,
+            10
+          ],
+          "texture": "#pickups"
+        },
+        "west": {
+          "uv": [
+            8,
+            8,
+            10.5,
+            10
+          ],
+          "texture": "#pickups"
+        },
+        "up": {
+          "uv": [
+            8,
+            11,
+            10,
+            11.5
+          ],
+          "texture": "#pickups"
+        },
+        "down": {
+          "uv": [
+            8,
+            11.5,
+            10,
+            12
+          ],
+          "texture": "#pickups"
+        }
+      }
+    },
+    {
+      "from": [
+        6,
+        0,
+        6
+      ],
+      "to": [
+        10,
+        1,
+        10
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            11.5,
+            10,
+            12
+          ],
+          "texture": "#pickups"
+        },
+        "east": {
+          "uv": [
+            8,
+            11.5,
+            10,
+            12
+          ],
+          "texture": "#pickups"
+        },
+        "south": {
+          "uv": [
+            8,
+            11.5,
+            10,
+            12
+          ],
+          "texture": "#pickups"
+        },
+        "west": {
+          "uv": [
+            8,
+            11.5,
+            10,
+            12
+          ],
+          "texture": "#pickups"
+        },
+        "up": {
+          "uv": [
+            12,
+            8,
+            14,
+            10
+          ],
+          "texture": "#pickups"
+        },
+        "down": {
+          "uv": [
+            14,
+            8,
+            16,
+            10
+          ],
+          "texture": "#pickups"
+        }
+      }
+    },
+    {
+      "from": [
+        6,
+        5,
+        6
+      ],
+      "to": [
+        10,
+        5.5,
+        10
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            11,
+            10,
+            11.5
+          ],
+          "texture": "#pickups"
+        },
+        "east": {
+          "uv": [
+            8,
+            11,
+            10,
+            11.5
+          ],
+          "texture": "#pickups"
+        },
+        "south": {
+          "uv": [
+            8,
+            11,
+            10,
+            11.5
+          ],
+          "texture": "#pickups"
+        },
+        "west": {
+          "uv": [
+            8,
+            11,
+            10,
+            11.5
+          ],
+          "texture": "#pickups"
+        },
+        "up": {
+          "uv": [
+            12,
+            8,
+            14,
+            10
+          ],
+          "texture": "#pickups"
+        },
+        "down": {
+          "uv": [
+            14,
+            8,
+            16,
+            10
+          ],
+          "texture": "#pickups"
+        }
+      }
+    },
+    {
+      "from": [
+        3.775,
+        5.75,
+        3.975
+      ],
+      "to": [
+        6.025,
+        5.75,
+        7.975
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            9,
+            14,
+            8,
+            12
+          ],
+          "texture": "#pickups"
+        },
+        "down": {
+          "uv": [
+            9,
+            12,
+            8,
+            14
+          ],
+          "texture": "#pickups"
+        }
+      },
+      "rotation": {
+        "origin": [
+          4.9,
+          5.75,
+          5.975
+        ],
+        "axis": "z",
+        "angle": 45,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        5.6003,
+        6.0671,
+        3.975
+      ],
+      "to": [
+        8.1003,
+        6.0671,
+        7.975
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            9,
+            12,
+            10.5,
+            14
+          ],
+          "texture": "#pickups"
+        },
+        "down": {
+          "uv": [
+            9,
+            14,
+            10.5,
+            12
+          ],
+          "texture": "#pickups"
+        }
+      },
+      "rotation": {
+        "origin": [
+          6.8503,
+          6.0671,
+          5.975
+        ],
+        "axis": "z",
+        "angle": -22.5,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        7.8997,
+        6.0671,
+        8.025
+      ],
+      "to": [
+        10.3997,
+        6.0671,
+        12.025
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            10.5,
+            14,
+            9,
+            12
+          ],
+          "texture": "#pickups"
+        },
+        "down": {
+          "uv": [
+            10.5,
+            12,
+            9,
+            14
+          ],
+          "texture": "#pickups"
+        }
+      },
+      "rotation": {
+        "origin": [
+          9.1497,
+          6.0671,
+          10.025
+        ],
+        "axis": "z",
+        "angle": 22.5,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        9.975,
+        5.75,
+        8.025
+      ],
+      "to": [
+        12.225,
+        5.75,
+        12.025
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            8,
+            12,
+            9,
+            14
+          ],
+          "texture": "#pickups"
+        },
+        "down": {
+          "uv": [
+            8,
+            14,
+            9,
+            12
+          ],
+          "texture": "#pickups"
+        }
+      },
+      "rotation": {
+        "origin": [
+          11.1,
+          5.75,
+          10.025
+        ],
+        "axis": "z",
+        "angle": -45,
+        "rescale": false
+      }
+    }
+  ],
+  "display": {
+    "ground": {
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "gui": {
+      "rotation": [
+        30,
+        -135,
+        0
+      ],
+      "scale": [
+        0.28,
+        0.28,
+        0.28
+      ]
+    }
+  }
+}

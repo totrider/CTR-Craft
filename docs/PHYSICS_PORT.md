@@ -48,7 +48,7 @@ time you let go above and fall back under AccelSpeed (pumping), up to AccelSpeed
 big (fire level 0x80) if the target reached its top, else small (0x20); both call `VehFire_Increment(960 reserves, STACK, fire)` (`KartSim.startBoost`).
 AccelSpeed_ClassStat = Speed_ClassStat + 1500 (`KartSim.accelSpeed`). Read from the decomp by a fetch and cross-checked against world-of-kartcraft `rev.rs`
 (the structure follows it; GPL-3.0). While revving the kart stands braked and the gas revs instead of driving (`KartDriver`).
-**Not in the decomp as read:** when each traffic light comes on (only `trafficLightsTimer = 0xF00` and release at 0). `RaceGrid` uses three lights 960 ms apart: ours.
+The lamps are `DotLights.c`: red at 0xB40, 0x780 and 0x3C0 ms left, green at 0 (DOT_LIGHT_TIMER_*), 960 ms apart, matching `RaceGrid.lightsLit`.
 
 ## Not ported yet (M1 scope)
 Items (mask, shield, TNT, turbo item), hit reactions other than the drift spin-out, wall-slam recovery animation,
@@ -64,6 +64,31 @@ are Balanced, Accel, Speed, Turn.
   per-quad flag.
 - `speedApprox` (= `forwardSpeed()`) is read before the engine's excess is cancelled, as in CTR, so at top speed it reads one
   frame of accel above `speed` (13500 vs 13140 for Balanced). Tests assert `speed`.
+
+## Kart vs kart (`KartBump`)
+Ported from `VehPhysForce_CollideDrivers` (VehPhysForce.c:1045-1072, the search) and `VehPhysCrash_AnyTwoCars` / `_BounceSelf`
+(ctr-native game/Vehicle/VehPhysCrash.c). Constants checked in the raw files: `THREAD_DRIVER_HIT_RADIUS = 0x40` (namespace_Proc.h:79),
+COLLISION_WEIGHT 256 / 256 / 300 / 200 for Balanced / Accel / Speed / Turn (zGlobal_DATA.c:7240), bounce divisor `0xC00`, Y clamp
+`0x3200`, feedback threshold `0x200`, volume map 0x3F..0xFF over 0..0x1900, sound cooldown 3 frames.
+- Every kart is a sphere of 64 lu (1.28 blocks). The nearest other kart closer than the radii's sum (128 lu = 2.56 blocks, centre
+  to centre) bumps it: both karts' velocities are blended by weight, each bounces off that velocity when closing in (1/3 comes
+  back as bounce), and a push of `16 * overlap` velocity units separates them. No damage, whatever speed.
+- CTR changes both karts in one call. Here every client works out its own kart's half from the other's position and velocity (the
+  blend and the contact normal are shared, so it is the same arithmetic). Another kart's velocity is the distance its entity moved
+  over the last game tick, as nothing relays it. All karts count as Balanced (256) until the class is synced.
+- The bump runs where CTR runs it: after the collision sweep, once the engine's accel is taken off the velocity and before the
+  speed is rebuilt from it. The crash sound (the placeholder slam) plays at the decomp's volume.
+- Not ported: CTR's weapon / shield / turbo-item damage queued on contact (VehPhysCrash_Attack), the voice line, controller rumble.
+  Interaction with Minecraft entities (mobs, boats, damage, power-ups) is a separate system, on by default.
+
+## Wumpa fruit flying to the HUD (client, `WumpaFly`)
+- `UI_RenderFrame.c` (the `PickupWumpaHUD` block), `RB_Fruit.c` / `RB_Crate.c` (what sets it), `UI_Lerp2D_HUD`. Taking a fruit sets `startX/startY` to its
+  screen position minus 0x14, `cooldown = 5` and `numCollected++` (a crate sets `numCollected` to 5 to 8). Each 30 Hz frame with fruit queued: with `cooldown`
+  at 0 one fruit arrives (`numCollected--`, `RB_Player_ModifyWumpa(+1)`, sound 0x42) and the timer restarts at 5 while more are queued; otherwise the fruit
+  icon is drawn at `end + cooldown * (start - end) / 5` (integer maths, the HUD fruit at (316, 24) of the 512 x 216 screen) and `cooldown--`. So one fruit
+  flies at a time and each takes 6 frames, and the HUD count only goes up on arrival.
+- Here the HUD shows the real count minus the queued fruit (the server's count and the juiced state are not delayed), and the start is the kart's screen
+  position for loose fruit too. The arrival sound (OtherFX 0x42, `fruit_arrive`) plays 2D at each arrival; the pickup itself plays 0x43 (`fruit_pickup`).
 
 ## Tests
 `src/test/java/com/ctrcraft/physics/KartSimTest.java` checks the numbers the spec derives: top speed reached in about 37 frames,

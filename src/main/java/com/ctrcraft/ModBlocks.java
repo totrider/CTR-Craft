@@ -53,6 +53,21 @@ public final class ModBlocks {
     public static final DeferredItem<BlockItem> CHECKPOINT_NODE_ITEM = ModItems.ITEMS.register("checkpoint_node",
             () -> new com.ctrcraft.track.TrackNodeItem(CHECKPOINT_NODE.get(), new Item.Properties()));
 
+    /** Pickup spots: a fruit, a fruit crate or a power-up crate appears here while a race is on nearby (or the spot has a redstone signal). */
+    public static final DeferredBlock<com.ctrcraft.pickup.PickupSpotBlock> FRUIT_SPOT = BLOCKS.register("fruit_spot",
+            () -> new com.ctrcraft.pickup.PickupSpotBlock(spotProps(), com.ctrcraft.pickup.PickupKind.FRUIT));
+    public static final DeferredBlock<com.ctrcraft.pickup.PickupSpotBlock> FRUIT_CRATE_SPOT = BLOCKS.register("fruit_crate_spot",
+            () -> new com.ctrcraft.pickup.PickupSpotBlock(spotProps(), com.ctrcraft.pickup.PickupKind.FRUIT_CRATE));
+    public static final DeferredBlock<com.ctrcraft.pickup.PickupSpotBlock> POWERUP_CRATE_SPOT = BLOCKS.register("powerup_crate_spot",
+            () -> new com.ctrcraft.pickup.PickupSpotBlock(spotProps(), com.ctrcraft.pickup.PickupKind.POWERUP_CRATE));
+    public static final DeferredItem<BlockItem> FRUIT_SPOT_ITEM = item("fruit_spot", FRUIT_SPOT);
+    public static final DeferredItem<BlockItem> FRUIT_CRATE_SPOT_ITEM = item("fruit_crate_spot", FRUIT_CRATE_SPOT);
+    public static final DeferredItem<BlockItem> POWERUP_CRATE_SPOT_ITEM = item("powerup_crate_spot", POWERUP_CRATE_SPOT);
+
+    private static BlockBehaviour.Properties spotProps() {
+        return BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_ORANGE).strength(0.5F).sound(SoundType.METAL).noCollission().noOcclusion();
+    }
+
     private static BlockBehaviour.Properties nodeProps() {
         return BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_GREEN).strength(0.5F).sound(SoundType.METAL)
                 .noCollission().noOcclusion();

@@ -41,6 +41,20 @@ public final class NodeGeometry {
     }
 
     /** The unit vector a node faces along (x, z): rotation 0 is south (+z), turning clockwise, like a standing sign. */
+    /** The squared distance from the point to the segment a-b (a point if a == b). */
+    public static double segmentDistSq(double px, double py, double pz, double ax, double ay, double az, double bx, double by, double bz) {
+        double abx = bx - ax;
+        double aby = by - ay;
+        double abz = bz - az;
+        double len = abx * abx + aby * aby + abz * abz;
+        double t = len < 1e-9 ? 0.0 : ((px - ax) * abx + (py - ay) * aby + (pz - az) * abz) / len;
+        t = Math.max(0.0, Math.min(1.0, t));
+        double dx = px - (ax + abx * t);
+        double dy = py - (ay + aby * t);
+        double dz = pz - (az + abz * t);
+        return dx * dx + dy * dy + dz * dz;
+    }
+
     public static double facingX(int rotation) {
         return -Math.sin(Math.toRadians((rotation & 15) * 22.5));
     }

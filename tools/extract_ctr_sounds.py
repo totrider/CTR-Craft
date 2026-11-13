@@ -127,6 +127,11 @@ class Howl:
             for _ in range(count):
                 table.append({"flags": d[at], "volume": d[at + 1], "pitch": u16(at + 2), "spu": u16(at + spu_off)})
                 at += 8
+        # the offsets (in 2048-byte sectors) of the CSEQ song packs follow the bank offsets: howl_ParseHeader in HOWL_Load.c (howl_songOffsets)
+        n_songs = u32(0x20)
+        self.data = d
+        self.spu_sizes = sizes
+        self.song_offsets = [u16(at + n_banks * 2 + i * 2) for i in range(n_songs)] if n_songs < 4096 else []
         self.samples = {}
         for b in range(n_banks):
             start = u16(at + b * 2) * 2048
@@ -204,6 +209,24 @@ MAPPING = {
     "meter_full": ("other", 0x0F, False, 1.0, None, "VehPhysProc.c: VEH_PHYS_PROC_DRIFT_METER_FULL_FX = 0xF"),
     "wall_hit": ("other", 0x14, False, 1.0, 0.6, "VehEmitter.c: wall rub loop OtherFX 0x14, first 0.6 s"),
     "slam": ("other", 0x06, False, 1.0, None, "COLL.c: hard wall impact, OtherFX 6"),
+    # race, pickups and kart bumps (all through the same OtherFX bank)
+    "light_count": ("other", 0x45, False, 1.0, None, "DotLights.c: DOT_LIGHT_FX_COUNTDOWN, each red lamp"),
+    "light_green": ("other", 0x46, False, 1.0, None, "DotLights.c: DOT_LIGHT_FX_GREEN, the green lamp at GO"),
+    "fruit_pickup": ("other", 0x43, False, 1.0, None, "RB_Fruit.c: PlaySound3D(0x43) when a Wumpa fruit is taken"),
+    "fruit_arrive": ("other", 0x42, False, 1.0, None, "UI_RenderFrame.c: OtherFX_Play(0x42, 1) each time a flying Wumpa fruit reaches the HUD"),
+    "glass_shatter": ("other", 0x3F, False, 1.0, None, "RB_GenericMine.c: PlaySound3D(0x3f), a Nitro crate or a flask bursting (a TNT crate has its own, 0x3d)"),
+    "mine_drop": ("other", 0x52, False, 1.0, None, "VehPickupItem.c SOUND_MINE_DROP: a TNT or Nitro crate or a flask put down behind the kart, and a flask thrown"),
+    "tnt_hit": ("other", 0x50, False, 1.0, None, "RB_GenericMine.c: PlaySound3D(0x50), the 'bounce' when a kart runs into a TNT crate and it is thrown onto its head"),
+    "tnt_land": ("other", 0x51, False, 1.0, None, "RB_TNT.c: PlaySound3D(0x51) when the TNT crate lands on a kart's head"),
+    "tnt_tick": ("other", 0x3E, False, 1.0, None, "RB_TNT.c: PlaySound3D(0x3e), the honk at frames 0, 20, 40, 60, 70 and 80 of the 90 on the head"),
+    "tnt_explode": ("other", 0x3D, False, 1.0, None, "RB_TNT.c: PlaySound3D(0x3d), the explosion"),
+    "crate_break": ("other", 0x3C, False, 1.0, None, "RB_Crate.c: PlaySound3D(0x3c) when a crate breaks"),
+    "item_roll": ("other", 0x5D, True, 1.0, None, "RB_Crate.c: OtherFX_Play(0x5d, 0) when the weapon roulette starts; the sound loops for the whole roll (MainGameEnd.c stops it): the mod loops it on the client while the roulette runs"),
+    "item_get": ("other", 0x5E, False, 1.0, None, "VehPhysProc.c: VEH_PHYS_PROC_ITEM_ROLL_NORMAL_FX, the item is drawn"),
+    "item_get_juiced": ("other", 0x41, False, 1.0, None, "VehPhysProc.c: VEH_PHYS_PROC_ITEM_ROLL_JUICED_FX, with ten wumpa"),
+    "crash_hard": ("other", 0x0A, False, 1.0, None, "HOWL_OtherFXRecycle.c OtherFX_DriverCrashing: volume 0xDD and up"),
+    "crash_mid": ("other", 0x0C, False, 1.0, None, "HOWL_OtherFXRecycle.c OtherFX_DriverCrashing: volume above 0xA0"),
+    "crash_soft": ("other", 0x0B, False, 1.0, None, "HOWL_OtherFXRecycle.c OtherFX_DriverCrashing: the rest"),
 }
 # no CTR sound exists for: drift_start, boost_fail (the early boost only puffs smoke), meter_red, spin_out -> placeholders stay.
 
@@ -298,7 +321,7 @@ def main():
         oggenc.write_ogg(os.path.join(sounds_dir, name + ".ogg"), np.clip(x, -1, 1), rate, quality=0.5)
     with open(os.path.join(pack, "pack.mcmeta"), "w", encoding="utf-8", newline="\n") as f:
         json.dump({"pack": {"pack_format": 34,
-                            "description": "CTR Craft: original sounds extracted from your own disc (local use only, do not share)"}}, f, indent=2)
+                            "description": "Craft Team Racing: original sounds extracted from your own disc (local use only, do not share)"}}, f, indent=2)
     with open(os.path.join(pack, "README.txt"), "w", encoding="utf-8", newline="\n") as f:
         f.write("Made by tools/extract_ctr_sounds.py from the owner's own copy of Crash Team Racing.\n"
                 "The recordings belong to Sony / Naughty Dog: keep this pack on this machine, do not share or upload it.\n"

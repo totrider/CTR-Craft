@@ -1,4 +1,4 @@
-# CTR Craft roadmap
+# Craft Team Racing roadmap
 
 Target: Minecraft 1.21.1, NeoForge 21.1.265, Java 21. Mod id `ctrcraft`, package `com.ctrcraft`.
 Goal: drive Crash Team Racing-style karts (CTR's real physics) on ordinary Minecraft block terrain, built from
@@ -36,7 +36,7 @@ Status: **done and played** (user: "feels good"). Dismount teleports were the se
 1. [x] Read ctr-physics-spec.md + the Rust port; map in [PHYSICS_PORT.md](PHYSICS_PORT.md).
 2. [x] `com.ctrcraft.physics`: `KartSim` (Normal, Powerslide, Spin-out, Wall slam, hop, hang time, turbo reserves, terrain
    table, Balanced/Accel/Speed/Turn classes) + 7 unit tests.
-3. [x] `KartEntity`, `KartItem` (creative tab "Crash Team Racing Craft"), placeholder model `blockbench/kart/kart.bbmodel`
+3. [x] `KartEntity`, `KartItem` (creative tab "Craft Team Racing"), placeholder model `blockbench/kart/kart.bbmodel`
    -> `tools/make_kart.py` -> item model, `KartRenderer` (draws the baked item model).
 4. [x] Ride: right-click mounts; keys: W gas, S reverse, A/D steer, Space = R1 (hop/drift), C = L1 (boost press),
    X = brake; sneak dismounts. Camera swings behind the kart (third person on mount).
@@ -48,8 +48,8 @@ Known limits: steps and slopes are walls (M2), no sound/particles/HUD yet (turbo
 ### M1.5 - Feel and feedback (from the first test)
 First test findings: dismounting sometimes put the player at an earlier position (fixed in code, see KartDismountPayload; the
 log line "Kart dismount: ... blocks" will show if the server's kart was behind); the drive felt janky (cause not yet pinned).
-What CTR itself has, to copy (the HUD is *not* a speedometer: CTR shows the powerslide meter and the hang-time meter):
-- [x] HUD (`KartHud`): speedometer in CTR's chunky yellow style (World of Kartcraft has one too, CTR itself does not), powerslide turbo meter with red zone and boost pips, reserves bar, hang-time meter with its tiers.
+What CTR itself has, to copy (its single-player HUD has a dial speedometer with a needle, the powerslide meter and the hang-time meter, and no speed number):
+- [x] HUD (`KartHud`): the original's: the dial (green, yellow and red band over a dark fan, gold needle; `Speedometer`), the powerslide meter box (green while there is room, red when a boost press is due) and the hang-time bar with its readout box, at the original's positions. No speed number, as in the original.
 - [x] Boost wheelie ("rearing"): WHEELIE_START/HOLD/RECOVER pose tables are in the spec/Rust port (lift, forward shift, pitch, scale).
 - [x] Exhaust: turbo flame sized 5 + (fireLevel >> 6), backfire puff on a failed (early) boost, drift tyre smoke, wall-rub sparks.
 - [x] Sounds: engine pitch/volume from CTR's engine-sound logic (ported, drives our own samples), skid, boost, hop, land, wall hit.
@@ -77,6 +77,7 @@ Status: **core done and played** (steps, slabs, stairs, mixed stairs smoothed; b
 
 ### M2.5 - Racers, pad families, Wumpa (agreed 2026-11-12; faithful by default, extensions opt-in)
 Principle: see the fidelity policy in [../CLAUDE.md](../CLAUDE.md). PS1 behaviour is the default; anything else is a separate block/item/data entry.
+- **Fruit, crates, power-ups, rule sets:** design in [DESIGN_ITEMS.md](DESIGN_ITEMS.md); the pure core (item tables, `RuleSet`) is built.
 - **Boost pad families.** The regular Boost Pad family stays exactly the PS1 turbo pad (cap 4096, reserves 960 frozen, accel 8000).
   Extensions as extra block families (same four shapes, Fusion-connected, copycat-able, each with its own colour): 
   - *Super Boost Pad* (blue): PS1's own super turbo pad (`COLL_STEP_TRIGGER_SUPER_TURBO_PAD`: reserves 120 frozen, fire level 0x800, cap 18432,
@@ -114,6 +115,8 @@ Replaces the old "checkpoints / laps / timer / race manager" line in M2.
 - Compat with Create (kinetic/stress for optional engines?) only if it falls out naturally.
 
 ### M5+ (ideas, unscheduled)
+- **Map integration (decided 2026-11-12):** no track display of our own. Show the track and the racers through Xaero's Minimap / World Map
+  (an integration or extension if the mods allow it; how is still to be researched, including their licences and whether they offer an API).
 - Weapons/items (crates, wumpa), AI karts, race manager block, track editor, custom character skins, sounds/music
   (original), more kart classes, replay/ghosts.
 

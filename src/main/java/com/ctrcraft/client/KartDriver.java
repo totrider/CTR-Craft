@@ -1,16 +1,21 @@
 package com.ctrcraft.client;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.ctrcraft.CtrCraftMod;
 import com.ctrcraft.ModSounds;
+import com.ctrcraft.CtrConfig;
+import com.ctrcraft.kart.ContactRules;
 import com.ctrcraft.kart.KartEntity;
 import com.ctrcraft.kart.KartFlags;
 import com.ctrcraft.physics.KartEvent;
 import com.ctrcraft.kart.KartScale;
 import com.ctrcraft.net.KartDismountPayload;
+import com.ctrcraft.net.KartHitPayload;
 import com.ctrcraft.net.KartStatePayload;
 import com.ctrcraft.physics.FixedMath;
+import com.ctrcraft.physics.KartBump;
 import com.ctrcraft.physics.KartClass;
 import com.ctrcraft.physics.KartInput;
 import com.ctrcraft.physics.KartSim;
@@ -29,6 +34,10 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.vehicle.VehicleEntity;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -67,6 +76,7 @@ public final class KartDriver {
     private static int curDrawn;
 
     private static void reset() {
+        com.ctrcraft.pickup.ItemClient.clear();
         sim = null;
         simEntityId = -1;
         accumulator = 0;
@@ -152,7 +162,35 @@ public final class KartDriver {
                     sim.turboPad();
                 }
             }
+            if (sim.cloudActive() && mc.level != null) {
+                // the rain cloud over the kart (the original's is a 3D cloud model with a rain emitter; these particles stand in for it)
+                for (int i = 0; i < 3; i++) {
+                    double ox = (mc.level.random.nextDouble() - 0.5) * 1.6;
+                    double oz = (mc.level.random.nextDouble() - 0.5) * 1.6;
+                    mc.level.addParticle(net.minecraft.core.particles.ParticleTypes.CLOUD, kart.getX() + ox, kart.getY() + 2.4, kart.getZ() + oz, 0.0, 0.0, 0.0);
+                    mc.level.addParticle(net.minecraft.core.particles.ParticleTypes.RAIN, kart.getX() + ox, kart.getY() + 1.6, kart.getZ() + oz, 0.0, 0.0, 0.0);
+                }
+            }
+            if (sim.cloudIce()) sim.groundType = com.ctrcraft.physics.Terrain.ICE;          // RAIN_CLOUD_EFFECT_ICE_TERRAIN
+            sim.setOthers(nearbyKarts(mc, kart));
+            sim.wumpa = com.ctrcraft.pickup.ItemClient.wumpa();
+            int itemEffect = com.ctrcraft.pickup.ItemClient.takeEffect();
+            if (itemEffect == com.ctrcraft.pickup.ItemManager.EFFECT_TURBO || itemEffect == com.ctrcraft.pickup.ItemManager.EFFECT_TURBO_JUICED) {
+                sim.itemTurbo(itemEffect == com.ctrcraft.pickup.ItemManager.EFFECT_TURBO_JUICED);
+            } else if (itemEffect == com.ctrcraft.pickup.ItemManager.EFFECT_SLOW) {
+                tntUntilMs = System.currentTimeMillis() + (com.ctrcraft.pickup.TntEntity.FUSE_TICKS + 12) * 50L;
+            } else if (itemEffect == com.ctrcraft.pickup.ItemManager.EFFECT_SPIN) {
+                sim.itemSpin();
+                ScreenFlash.start();
+            } else if (itemEffect >= com.ctrcraft.pickup.ItemManager.EFFECT_CLOUD) {
+                sim.setCloud(itemEffect - com.ctrcraft.pickup.ItemManager.EFFECT_CLOUD, com.ctrcraft.pickup.ItemManager.CLOUD_TICKS * 50);
+            } else if (itemEffect == com.ctrcraft.pickup.ItemManager.EFFECT_CLEAR) {
+                tntUntilMs = 0;
+            } else if (itemEffect == com.ctrcraft.pickup.ItemManager.EFFECT_BLAST) {
+                sim.itemBlast();
+            }
             sim.tick(world, input);
+            sendHits(mc, kart, sim.drainBumps());
             playEvents(mc, sim.drainEvents());
             snapshot(false);
         }
@@ -168,6 +206,67 @@ public final class KartDriver {
             dismountSent = false;
         }
     }
+
+    /**
+     * The other karts within bumping range (VehPhysForce_CollideDrivers' thread search): their position in lu and the velocity they
+     * moved with over the last game tick, in lu/256 per sim frame.
+     */
+    private static List<KartBump.Other> nearbyKarts(Minecraft mc, KartEntity self) {
+        double reach = KartScale.toBlocks(2.0 * KartBump.HIT_RADIUS) + 1.0;
+        boolean entities = contactOn();
+        List<Entity> near = mc.level.getEntitiesOfClass(Entity.class, self.getBoundingBox().inflate(reach),
+                e -> e != self && !e.isRemoved() && !e.isSpectator() && !self.hasPassenger(e) && (e instanceof KartEntity || (entities && bumpable(e))));
+        if (near.isEmpty()) {
+            return List.of();
+        }
+        double perFrame = KartScale.LU_PER_BLOCK * 20.0 / 30.0 * 256.0; // blocks per game tick -> lu/256 per sim frame
+        List<KartBump.Other> out = new ArrayList<>(near.size());
+        for (Entity k : near) {
+            V3 v = new V3((k.getX() - k.xo) * perFrame, (k.getY() - k.yo) * perFrame, (k.getZ() - k.zo) * perFrame);
+            if (k instanceof KartEntity) {
+                out.add(new KartBump.Other(toLu(k.position()), v, KartBump.weight(KartClass.BALANCED)));
+            } else {
+                out.add(new KartBump.Other(toLu(k.position()), v, ContactRules.weight(k.getBbWidth(), k.getBbHeight()),
+                        ContactRules.reach(k.getBbWidth()), k.getId()));
+            }
+        }
+        return out;
+    }
+
+    /** What a kart runs into besides other karts: living things (mobs, players on foot) and vehicles (boats, minecarts) that are not riding. */
+    private static boolean bumpable(Entity e) {
+        return (e instanceof LivingEntity && !(e instanceof ArmorStand) || e instanceof VehicleEntity) && e.getVehicle() == null;
+    }
+
+    private static boolean contactOn() {
+        try {
+            return CtrConfig.ENTITY_CONTACT.get();
+        } catch (IllegalStateException notLoadedYet) {
+            return true;
+        }
+    }
+
+    /** The server throws and hurts what this kart hit at speed (kart against kart has no damage, as in CTR). */
+    private static void sendHits(Minecraft mc, KartEntity kart, List<KartSim.Bump> bumps) {
+        long now = System.currentTimeMillis();
+        for (KartSim.Bump b : bumps) {
+            if (b.id() < 0 || b.impact() < KartBump.FEEDBACK_MIN_IMPACT) {
+                continue;
+            }
+            Long last = LAST_HIT_SENT.get(b.id());
+            if (last != null && now - last < ContactRules.HIT_COOLDOWN_TICKS * 50L) {
+                continue;
+            }
+            LAST_HIT_SENT.put(b.id(), now);
+            if (LAST_HIT_SENT.size() > 256) {
+                LAST_HIT_SENT.values().removeIf(t -> now - t > 5000);
+            }
+            // the normal runs from the entity to the kart; the entity is hit the opposite way
+            PacketDistributor.sendToServer(new KartHitPayload(kart.getId(), b.id(), b.impact(), (float) -b.normal().x, (float) -b.normal().z));
+        }
+    }
+
+    private static final java.util.Map<Integer, Long> LAST_HIT_SENT = new java.util.HashMap<>();
 
     private static boolean dismountSent;
     private static net.minecraft.world.level.Level worldLevel;
@@ -273,8 +372,14 @@ public final class KartDriver {
     }
 
     /** One-shot sounds for what just happened, played at the listener (it is your own kart). */
+    /** While a TNT crate is on or flying onto the kart: every jump that starts is reported (the server counts them). */
+    private static long tntUntilMs;
+
     private static void playEvents(Minecraft mc, List<KartEvent> events) {
         for (KartEvent e : events) {
+            if (e.type() == KartEvent.Type.HOP && System.currentTimeMillis() < tntUntilMs) {
+                PacketDistributor.sendToServer(new com.ctrcraft.pickup.TntShakePayload());       // the server counts the jumps, as the game does
+            }
             SoundEvent sound = null;
             float pitch = 1.0F;
             float volume = 1.0F;
@@ -306,6 +411,11 @@ public final class KartDriver {
                 }
                 case WALL_RUB -> sound = ModSounds.WALL_HIT.get();
                 case SLAM -> sound = ModSounds.SLAM.get();
+                // OtherFX_DriverCrashing: crash 0xA from volume 0xDD up, 0xC above 0xA0, else 0xB; the volume is VehPhysCrash's
+                case BUMP -> {
+                    sound = e.value() >= 0xDD ? ModSounds.CRASH_HARD.get() : e.value() > 0xA0 ? ModSounds.CRASH_MID.get() : ModSounds.CRASH_SOFT.get();
+                    volume = e.value() / 255.0F;
+                }
                 case SPIN_OUT -> sound = ModSounds.SPIN_OUT.get();
                 default -> { }
             }
@@ -315,6 +425,9 @@ public final class KartDriver {
         }
     }
 
+    private static final int LEAVE_TICKS = 40;
+    private static int leaveHeld;
+
     private static V3 toLu(Vec3 pos) {
         return new V3(KartScale.toLu(pos.x), KartScale.toLu(pos.y), KartScale.toLu(pos.z));
     }
@@ -323,6 +436,23 @@ public final class KartDriver {
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
+        while (CtrCraftClient.KEY_ITEM.consumeClick()) {
+            if (mc.player != null && mc.player.getVehicle() instanceof KartEntity) {
+                PacketDistributor.sendToServer(new com.ctrcraft.pickup.UseItemPayload(mc.options.keyUp.isDown()));
+            }
+        }
+        // leaving a race: the key held for two seconds
+        if (RaceClient.active() && mc.player != null && mc.player.getVehicle() instanceof KartEntity && CtrCraftClient.KEY_LEAVE.isDown()) {
+            leaveHeld++;
+            if (leaveHeld >= LEAVE_TICKS) {
+                leaveHeld = 0;
+                PacketDistributor.sendToServer(new com.ctrcraft.track.LeaveRacePayload());
+            } else if (leaveHeld % 10 == 1) {
+                mc.player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.ctrcraft.race.leaving", leaveHeld * 100 / LEAVE_TICKS), true);
+            }
+        } else {
+            leaveHeld = 0;
+        }
         while (CtrCraftClient.KEY_RESPAWN.consumeClick()) {
             if (RaceClient.active()) {
                 PacketDistributor.sendToServer(new com.ctrcraft.track.RespawnPayload());

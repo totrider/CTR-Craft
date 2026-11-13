@@ -19,7 +19,7 @@ public final class KartFlags {
     /** Burning past the sacred fire cap: only a super turbo pad does that in CTR, and we have none yet. */
     public static final int ULTRA = 128;
     /** The bits a client may set (anything else is dropped by the server). */
-    public static final int MASK = 0xFFFFF;
+    public static final int MASK = 0x7FFFFFF;
 
     public static int encode(KartSim sim) {
         int f = 0;
@@ -35,6 +35,7 @@ public final class KartFlags {
         f |= (sim.fireSize() & 15) << 13;
         f |= (sim.flameFade() & 7) << 17;
         if (sim.ultraFire()) f |= ULTRA;
+        f |= (sim.tumbleCode() & 127) << 20;
         return f;
     }
 
@@ -49,6 +50,11 @@ public final class KartFlags {
     /** How far the flame has faded, 0 (full) to 7. */
     public static int fade(int flags) {
         return (flags >> 17) & 7;
+    }
+
+    /** 0 when the kart is not tumbling (after an explosion), else 64 | the turn of its flip in 64ths of a revolution. */
+    public static int tumble(int flags) {
+        return (flags >> 20) & 127;
     }
 
     public static boolean has(int flags, int bit) {

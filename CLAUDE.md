@@ -1,10 +1,11 @@
-# CTR Craft - project rules
+# Craft Team Racing - project rules
 
 NeoForge 1.21.1 (21.1.265) mod, Java 21, Parchment mappings. Mod id `ctrcraft`, package `com.ctrcraft`.
 Roadmap: `docs/ROADMAP.md`. Research: `docs/RESEARCH.md`.
 
 ## Workflow
-- Test instance: `F:\ATLauncher\instances\CTRCraft` (NeoForge 21.1.265). `build-and-install.bat` builds and copies the
+- Test instances: `F:\ATLauncher\instances\CTRCraft` (NeoForge 21.1.265) and `F:\ATLauncher\instances\CTRCraftMP` (multiplayer tests;
+  every build goes to both). `build-and-install.bat` builds and copies the
   jar into its `mods` folder. Minecraft locks the jar while it runs: close the game first.
 - Models: **Blockbench first**. Every block/item/entity model's geometry lives in `blockbench/<family>/*.bbmodel` and is
   the source of truth; generators in `tools/` read them. Never put geometry only in Java or hand-edit generated model
@@ -22,8 +23,8 @@ Roadmap: `docs/ROADMAP.md`. Research: `docs/RESEARCH.md`.
 - Sable/Create are soft dependencies (compile-only + `compat/` package + optional mod dependency). The mod must load
   without them. Never bundle Sable (Polyform Shield).
 - Do not ship CTR game assets (models, textures, audio). License is GPL-3.0-or-later because the physics is a port.
-  Original CTR sounds only ever exist as a LOCAL resource pack made from the user's own disc by `tools/extract_ctr_sounds.py`
-  (`extract-ctr-sounds.bat`; output in git-ignored `local-assets/`, installed into the instance's `resourcepacks/`, never in the jar,
+  Original CTR sounds and textures only ever exist as LOCAL resource packs made from the user's own disc by `tools/extract_ctr_sounds.py` and
+  `tools/extract_ctr_textures.py` (`extract-ctr-sounds.bat`, `extract-ctr-textures.bat`; output in git-ignored `local-assets/`, installed into the instance's `resourcepacks/`, never in the jar,
   never uploaded). The disc image in the project folder is git-ignored too. The mod ships synthesised placeholders (`tools/make_sounds.py`).
 - Client-side sim at fixed 30 Hz with interpolation; server validates, does not simulate.
 
@@ -32,7 +33,11 @@ Roadmap: `docs/ROADMAP.md`. Research: `docs/RESEARCH.md`.
   memory. A constant or rule that is not in the decomp is not "CTR": say so, and make it an extension.
 - **Extensions are opt-in, by what you build or choose**: a different block (e.g. a Super Boost Pad family), a different item, a datapack
   entry or a config flag; never a silent change to the default. Because tracks are built from blocks, an extension is just another block.
-- When unsure what PS1 does, read `reference/ctr-native` (VehFire.c, VehTurbo.c, VehPhysProc.c...) before answering or coding.
+- **Exception, decided by the author: interaction with Minecraft entities** (mobs, boats, minecarts, players on foot; damage, knockback,
+  power-ups hitting them) is core to the survival gameplay and is **on by default**. It is a separate system from the race mechanics and
+  never changes the CTR kart-vs-kart physics; tune it with config flags rather than switching it off by default.
+- When unsure what PS1 does, read the decomp before answering or coding: the full ctr-native source is in `reference/ctr-native-src/` (git-ignored;
+  `game/Vehicle/*.c`, `game/DotLights.c`, `game/zGlobal_DATA.c` for the stat tables...); `reference/ctr-native/` is an older partial copy.
 
 ## Privacy and scope (this repository is public)
 - **Never mention, link or name any other project, repository, folder or work of the author's** (private or public, finished or not), or any

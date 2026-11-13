@@ -1,6 +1,7 @@
 """
-A tiny mono Ogg Vorbis encoder over the libogg / libvorbis / libvorbisenc DLLs that ship with Krita (no pip packages, no ffmpeg:
-Krita's ffmpeg only encodes stereo, and Minecraft needs mono sounds for them to have a position).
+A tiny Ogg Vorbis encoder over the libogg / libvorbis / libvorbisenc DLLs that ship with Krita (no pip packages, no ffmpeg:
+Krita's ffmpeg only encodes stereo, and Minecraft needs mono sounds for them to have a position). Samples are 1-D (mono, for sound effects) or an array of
+shape (n, 2) (stereo, for music, which Minecraft plays without a position).
 
   from oggenc import write_ogg
   write_ogg("out.ogg", float_samples, 44100, quality=0.4)
@@ -36,11 +37,15 @@ def _load():
 
 def write_ogg(path, samples, rate=44100, quality=0.4):
     ogg, vorbis, enc = _load()
+    data = np.asarray(samples, dtype=np.float32)
+    channels = 1 if data.ndim == 1 else data.shape[1]
+    if channels not in (1, 2):
+        raise ValueError("write_ogg takes mono or stereo samples")
     big = lambda: C.create_string_buffer(8192)      # opaque, zeroed state structs: generously sized
     vi, vc, vd, vb, os_ = big(), big(), big(), big(), big()
     vorbis.vorbis_info_init(vi)
     enc.vorbis_encode_init_vbr.argtypes = [C.c_void_p, C.c_long, C.c_long, C.c_float]
-    if enc.vorbis_encode_init_vbr(vi, 1, rate, quality) != 0:
+    if enc.vorbis_encode_init_vbr(vi, channels, rate, quality) != 0:
         raise RuntimeError("vorbis_encode_init_vbr failed")
     vorbis.vorbis_comment_init(vc)
     vorbis.vorbis_comment_add_tag(vc, b"ENCODER", b"ctr-craft tools/oggenc.py")
@@ -65,7 +70,6 @@ def write_ogg(path, samples, rate=44100, quality=0.4):
 
     vorbis.vorbis_analysis_buffer.restype = C.POINTER(C.POINTER(C.c_float))
     vorbis.vorbis_analysis_buffer.argtypes = [C.c_void_p, C.c_int]
-    data = np.asarray(samples, dtype=np.float32)
     pos, n_total, chunk = 0, len(data), 1024
     op = OggPacket()
     eos = False
@@ -75,7 +79,9 @@ def write_ogg(path, samples, rate=44100, quality=0.4):
             vorbis.vorbis_analysis_wrote(vd, 0)
         else:
             buf = vorbis.vorbis_analysis_buffer(vd, n)
-            C.memmove(buf[0], data[pos: pos + n].ctypes.data, n * 4)
+            for c in range(channels):
+                chan = np.ascontiguousarray(data[pos: pos + n] if channels == 1 else data[pos: pos + n, c])
+                C.memmove(buf[c], chan.ctypes.data, n * 4)
             vorbis.vorbis_analysis_wrote(vd, n)
             pos += n
         while vorbis.vorbis_analysis_blockout(vd, vb) == 1:

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "ctrcraft:block/powerup_crate_spot"
+    }
+  }
+}

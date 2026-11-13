@@ -55,6 +55,27 @@ public final class TrackGraph {
         return Collections.unmodifiableMap(nodes);
     }
 
+    /**
+     * The squared distance from a point to the track the node {@code any} belongs to, taken as the lines that link its nodes (a node with no
+     * link counts as a point): a rough racing line, so a place beside a long straight is as near as one beside a node.
+     */
+    public double distSqToTrack(long any, double x, double y, double z) {
+        double best = Double.MAX_VALUE;
+        for (long p : component(any)) {
+            Node n = nodes.get(p);
+            if (n == null) continue;
+            double ax = NodeGeometry.x(p) + 0.5;
+            double ay = NodeGeometry.y(p) + 0.5;
+            double az = NodeGeometry.z(p) + 0.5;
+            best = Math.min(best, NodeGeometry.segmentDistSq(x, y, z, ax, ay, az, ax, ay, az));
+            for (long q : n.links()) {
+                best = Math.min(best, NodeGeometry.segmentDistSq(x, y, z, ax, ay, az,
+                        NodeGeometry.x(q) + 0.5, NodeGeometry.y(q) + 0.5, NodeGeometry.z(q) + 0.5));
+            }
+        }
+        return best;
+    }
+
     public Node get(long pos) {
         return nodes.get(pos);
     }

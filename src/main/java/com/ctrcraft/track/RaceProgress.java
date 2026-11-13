@@ -12,8 +12,8 @@ import java.util.Set;
  * main path in order, or take a recorded branch instead of the stretch of main path it replaces (rings of the branch in order, then it
  * rejoins the main path at its far end, and the skipped main nodes count as passed). Passing the start ring again closes a lap.
  *
- * <p>Which way round a branch runs is decided by the main path: it is entered at the end from which the rejoining end is closer
- * forwards along the course. A branch that runs past the start line (enters before it, rejoins after it) counts the lap when it rejoins.
+ * <p>Which way round a branch runs is decided by the main path: it is entered at the end from which the stretch of main path it replaces
+ * (compared by length) lies forwards along the course, the way it was recorded breaking ties. A branch that runs past the start line (enters before it, rejoins after it) counts the lap when it rejoins.
  */
 public final class RaceProgress {
     public enum Kind { NONE, NODE, LAP }
@@ -45,8 +45,13 @@ public final class RaceProgress {
             Integer from = idx.get(b.from());
             Integer to = idx.get(b.to());
             if (from == null || to == null) continue;
-            int d = Math.floorMod(to - from, n);
-            if (d * 2 <= n) {
+            // Which way round the branch runs: it replaces a stretch of the main path, so it is driven from the end where the stretch it matches in length starts.
+            // The shorter arc by node count is wrong on a course with few or uneven nodes (a branch across the start line), so the lengths are compared, and the
+            // direction it was recorded in decides when they do not (clearly) tell.
+            double len = branchLength(b);
+            double forward = Math.abs(arc(from, to) - len) / Math.max(len, 1.0);
+            double backward = Math.abs(arc(to, from) - len) / Math.max(len, 1.0);
+            if (from.equals(to) || forward <= backward * 1.4) {
                 branches.add(new Fwd(from, to, b.nodes(), b.to()));
             } else {
                 long[] rev = new long[b.nodes().length];
@@ -54,6 +59,27 @@ public final class RaceProgress {
                 branches.add(new Fwd(to, from, rev, b.from()));
             }
         }
+    }
+
+    private static double dist(long a, long b) {
+        double dx = NodeGeometry.x(a) - NodeGeometry.x(b);
+        double dy = NodeGeometry.y(a) - NodeGeometry.y(b);
+        double dz = NodeGeometry.z(a) - NodeGeometry.z(b);
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /** The length of the main path from main node {@code i} forwards (round the lap) to main node {@code j}. */
+    private double arc(int i, int j) {
+        double sum = 0;
+        for (int k = i; k != j; k = (k + 1) % n) sum += dist(main.get(k), main.get(k + 1));
+        return sum;
+    }
+
+    private static double branchLength(TrackRoutes.Branch b) {
+        long[] nodes = b.nodes();
+        double sum = dist(b.from(), nodes[0]) + dist(nodes[nodes.length - 1], b.to());
+        for (int i = 1; i < nodes.length; i++) sum += dist(nodes[i - 1], nodes[i]);
+        return sum;
     }
 
     public int laps() {

@@ -1,0 +1,182 @@
+{
+ "meta": {
+  "format_version": "4.10",
+  "model_format": "java_block",
+  "box_uv": false
+ },
+ "name": "powerup_crate",
+ "parent": "",
+ "ambientocclusion": true,
+ "front_gui_light": false,
+ "visible_box": [
+  1,
+  1,
+  0
+ ],
+ "resolution": {
+  "width": 16,
+  "height": 16
+ },
+ "elements": [
+  {
+   "name": "cube_0",
+   "box_uv": false,
+   "rescale": false,
+   "locked": false,
+   "light_emission": 0,
+   "render_order": "default",
+   "allow_mirror_modeling": true,
+   "from": [
+    0,
+    0,
+    0
+   ],
+   "to": [
+    16,
+    16,
+    16
+   ],
+   "autouv": 0,
+   "color": 0,
+   "origin": [
+    8,
+    8,
+    8
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "faces": {
+    "north": {
+     "uv": [
+      8,
+      0,
+      16,
+      8
+     ],
+     "texture": 0
+    },
+    "east": {
+     "uv": [
+      8,
+      0,
+      16,
+      8
+     ],
+     "texture": 0
+    },
+    "south": {
+     "uv": [
+      8,
+      0,
+      16,
+      8
+     ],
+     "texture": 0
+    },
+    "west": {
+     "uv": [
+      8,
+      0,
+      16,
+      8
+     ],
+     "texture": 0
+    },
+    "up": {
+     "uv": [
+      8,
+      0,
+      16,
+      8
+     ],
+     "texture": 0
+    },
+    "down": {
+     "uv": [
+      8,
+      0,
+      16,
+      8
+     ],
+     "texture": 0
+    }
+   },
+   "type": "cube",
+   "uuid": "306c6650-5a75-451d-856b-07fa22398399"
+  }
+ ],
+ "outliner": [
+  {
+   "name": "cube",
+   "origin": [
+    8,
+    8,
+    8
+   ],
+   "color": 0,
+   "uuid": "54b0b569-8777-4dcb-8bd2-663fac68ef29",
+   "export": true,
+   "isOpen": false,
+   "locked": false,
+   "visibility": true,
+   "autouv": 0,
+   "children": [
+    "306c6650-5a75-451d-856b-07fa22398399"
+   ]
+  }
+ ],
+ "textures": [
+  {
+   "path": "H:\\CTR Craft\\src\\main\\resources\\assets\\ctrcraft\\textures\\item\\pickups.png",
+   "name": "pickups.png",
+   "folder": "",
+   "namespace": "",
+   "id": "pickups",
+   "particle": false,
+   "render_mode": "default",
+   "render_sides": "auto",
+   "frame_time": 1,
+   "frame_order_type": "loop",
+   "frame_order": "",
+   "frame_interpolate": false,
+   "visible": true,
+   "mode": "bitmap",
+   "saved": true,
+   "uuid": "ffcad7f7-e90b-4e9d-a74f-7d476479e35c",
+   "relative_path": "../../src/main/resources/assets/ctrcraft/textures/item/pickups.png",
+   "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAC7ElEQVR4nL1WTWgTQRT+ZjMNMQpVUDANpJe2JKCXWBAkh1gQA7158KCgFUWIQm9CPXjzEGr00IOBUrAKgifxUqge2h6KEKi9pNge9JBCWsE/RBtD2nTk7WY2M9uUJuzGD3Z33sww781733tvmchGBRQsF36pIuLXhzX54rc1TX57PIrcxAzaQXq0cSaHB8gsHULxxZA5Xp1bPHA/7UlNVzE2+BeGFwbMjvhtxbGhhPbsB2kwd6uc3J881W2PCefXQ/Y6Q9D8zkc2m4cgtq4fONoV0eSpjO7SB8OnNbmAz5oslUdflu25tatBcz56pYzcosUx6TGODoCUk1KnLJWrMDphgKpchQxVRw2Yj2za8aabq95oRkq+mtYn8nlHTCd0Tsw8zmtyMA778IWVvfVAKo9m6xsdqcrRQdjKiXz7FCujE4rTiW4tE4h8cq7jBqQT3TbbVTLuZwQvRz5oE5cv6Hk+O9LIZ0JwZXvPISq5pHK18DjXNAPgIZqlWTPmSxJSRfTEgNynJJLrD5uuOZuT7BG91+ZQHPLIA+m+BaAv0VJblqk6NmjJTMzdEm76+car1zjiZ+AGw86uwJ+qQHjyB5Pr73vDIsAssSIE7sd/wvBZ8m5NWB5w088vpXzwBRh8PgZRE/BVtP8bkPJHYb85vleqmsp53e87YFYauunnG0eB0rHGQ3I74Go/J2K0AqmcsPS9hkDdA7WaQMXhAXI73VyOye10cy0EKsZSJ5CZ/Wq6V4ZHnSOZID12+24j3s1wrljS14v/oRS3Aw6XWD17Uhyus3qrJhDLf2GeG1B+R2WVo1AmrljxlMic2UKXRXJs05LerVs3IEaMn26NhGqqPn/6u60bO2HAJXpu9pi0H3gyIDw3oGC6/ADI+xtAf7ZfeGZAebmrpQOYwRC6ERL0pad/vD0jOL3Uikf5TpjY5cDHamNM/4N1WUVp0srzzWd7+3/LBkhQSW63n995MwU34PRy08/dwjTATT93i3+av0PRTbgmUQAAAABJRU5ErkJggg==",
+   "width": 32,
+   "height": 32
+  }
+ ],
+ "display": {
+  "gui": {
+   "rotation": [
+    30,
+    225,
+    0
+   ],
+   "scale": [
+    0.28,
+    0.28,
+    0.28
+   ]
+  },
+  "ground": {
+   "translation": [
+    0,
+    2,
+    0
+   ],
+   "scale": [
+    0.25,
+    0.25,
+    0.25
+   ]
+  }
+ },
+ "ctr_craft_note": "Stand-in pickup model in the original game's proportions (a crate is exactly one block). One group per part. The single texture slot 'pickups' is shared by all pickups: a 64x64 sheet (palette cells, the ? face, the fruit crate side), see tools/make_pickup_models.py."
+}

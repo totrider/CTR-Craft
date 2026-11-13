@@ -8,9 +8,43 @@ public final class RaceClient {
     private static int placedSeq;
     private static volatile long updatedAt;
 
+    private static volatile long introEndMs;
+    private static volatile int introTotalMs;
+
+    private static volatile int finishSeq;
+    private static volatile int finishPlace;
+
+    /** Counts the times this player finished a race (the DONE state may be replaced by OFF within the same client tick, so the music cannot rely on seeing it). */
+    public static int finishSeq() {
+        return finishSeq;
+    }
+
+    public static int finishPlace() {
+        return finishPlace;
+    }
+
     static void update(RacePayload payload) {
+        if (payload.phase() == RacePayload.DONE && state.phase() != RacePayload.DONE) {
+            finishPlace = payload.finishPlace();
+            finishSeq++;
+        }
+        boolean lightsBegin = payload.phase() == RacePayload.LIGHTS && state.phase() != RacePayload.LIGHTS;
         state = payload;
         updatedAt = System.currentTimeMillis();
+        if (lightsBegin) {
+            // the phase starts with the intro (jingle and camera pan): the lamps count from where the ticks left reach the lamps' own stretch
+            introTotalMs = Math.max(0, (payload.ticksLeft() - (RaceGrid.LIGHTS_TICKS + 20)) * 50);
+            introEndMs = updatedAt + introTotalMs;
+        }
+    }
+
+    /** Milliseconds of the race intro left (0 when there is none, or it is over): until then no lamps, no revving. */
+    public static long introMsLeft() {
+        return state.phase() == RacePayload.LIGHTS ? Math.max(0, introEndMs - System.currentTimeMillis()) : 0;
+    }
+
+    public static int introTotalMs() {
+        return introTotalMs;
     }
 
     public static RacePayload state() {
