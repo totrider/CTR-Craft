@@ -65,7 +65,7 @@ def _triangle_sprite(img, uv_local, shade):
     return out[y0:y1, x0:x1], (x0, y0, x1, y1)
 
 
-def _bake(img, stp, uv_local, shades, abr):
+def _bake(img, stp, uv_local, shades, abr, additive=False):
     """A triangle's picture with its Gouraud shading baked in and its see-through texels given an alpha: shades are the three corners' colours (colour / 128), abr the blend mode
     of its texture page (0: half and half, 1: added, 2: subtracted, 3: a quarter added)."""
     h, w = img.shape[:2]
@@ -81,6 +81,10 @@ def _bake(img, stp, uv_local, shades, abr):
         wts /= wts.sum(axis=-1, keepdims=True)
         shade = wts @ np.array(shades)
     rgb = np.minimum(img[:, :, :3].astype(np.float64) * shade, 255).astype(np.uint8)
+    if additive:
+        # the picture is ADDED to the screen (the renderer's additive blend): the colour is the texel times the vertex colours, and black adds nothing, so only the texels the picture leaves out are see-through
+        alpha = np.where(img[:, :, 3] > 0, 255, 0).astype(np.uint8)
+        return np.dstack([rgb, alpha])
     alpha = np.where(stp & (img[:, :, 3] > 0), 176 if abr == 1 else 128, img[:, :, 3]).astype(np.uint8)
     return np.dstack([rgb, alpha])
 
@@ -150,9 +154,9 @@ def _gouraud_cell(colours, size=GOURAUD_CELL):
     return np.dstack([rgb, np.full((size, size), 255, dtype=np.uint8)])
 
 
-def mesh_pack_files(vram, model, name, blocks_per_unit, frame=0, up=UP, animated=True, honour_cull=False):
+def mesh_pack_files(vram, model, name, blocks_per_unit, frame=0, up=UP, animated=True, honour_cull=False, exclude=(), pivot_ids=None, shade=None, translucent=True, kart_frame=False, pivot_point=None, additive=False, smooth=0, rim_zero=None, tri_override=None, gain=None):
     """{up}: the coordinate the model's height is in (1: the shared pack's models, 2: the level files', Wumpa fruit and crates; then the horizontal pair is turned and x flipped so
-    the left handed game frame becomes Minecraft's right handed one). {animated}: False takes one frame of the model whole (the fruit's spin is a turn the renderer does itself). {honour_cull}: the game's per-triangle "cull" flag is obeyed, a triangle without it is written both ways round."""
+    the left handed game frame becomes Minecraft's right handed one). {animated}: False takes one frame of the model whole (the fruit's spin is a turn the renderer does itself). {exclude}: triangle indices left out (the bomb's spark is a billboard). {pivot_ids}: when given, the model's origin is the middle of those triangles' vertices, put at (0.5, 0.5, 0.5) of the block (a thing that rolls: the bomb), not the base; {translucent}: False ignores the textures' semi-transparency bit (the bomb is solid); {shade}: True bakes the colour table's Gouraud shading (default SHADE_FROM_TABLE). {kart_frame}: the model is in the kart's frame (the game's +z forward becomes the mod's -z forward: taken as it is: the first guess, z flipped, drew the flame's wide end into the kart). {pivot_point}: a point of the model (before turning) that becomes the origin, at (0.5, 0.5, 0.5) of the block. {additive}: the game adds the model's picture to the screen (the boost flame): black is nothing, so the baked alpha is the brightness and the colour is brought up to full. {smooth}: a picture smaller than this many texels is blown up (nearest) to about this size before its vertex colours are baked, so a flat 4 texel picture can carry a smooth gradient (the flame's soft edge). {tri_override}: {triangle index: (texture number to use instead, [three corner colours, 0-255 scale of the game's 128 = 1])}: a triangle drawn with another triangle's picture and colours of its own (the flame's shell, to cover the gaps its own triangles leave). {gain}: (triangle indices, factor): those triangles' vertex colours are multiplied by the factor (a brighter flame cone). {rim_zero}: (vertex indices, triangle indices): in those triangles those vertices' colours are black (a soft rim; the flame's outer ring). {honour_cull}: the game's per-triangle "cull" flag is obeyed, a triangle without it is written both ways round."""
     nframes = ct.frame_count(model)
     frames = [ct.mesh_vertices(model, f) for f in range(nframes)] if (animated and nframes > 1) else [ct.mesh_vertices(model, frame)]
     tris = ct.mesh_triangles(model)
@@ -161,6 +165,8 @@ def mesh_pack_files(vram, model, name, blocks_per_unit, frame=0, up=UP, animated
 
     def to_xyz(v):
         # the game's frame is left handed (the crate lettering and the bomb in the footage show it), Minecraft's is right handed: x is flipped
+        if kart_frame and up == 1:
+            return np.array([v[0], v[1], v[2]], dtype=np.float64)
         if up == 2:
             return np.array([-v[0], v[2], -v[1]], dtype=np.float64)            # a reflection, as x flipped is for the pack's models (det -1)
         return np.array([-v[axes[0]], v[up], v[axes[1]]], dtype=np.float64)
@@ -171,18 +177,26 @@ def mesh_pack_files(vram, model, name, blocks_per_unit, frame=0, up=UP, animated
         spread = np.abs(np.array(pts_all) - pts_all[0]).max(axis=(0, 2))
         moving = set(int(k) for k in np.where(spread > MOVES)[0])
     bubble_ids = [i for i, (corner, tex, col, fl) in enumerate(tris) if moving and all(k in moving for k in corner)]
-    static_ids = [i for i in range(len(tris)) if i not in bubble_ids]
+    static_ids = [i for i in range(len(tris)) if i not in bubble_ids and i not in exclude]
 
     # the flask is centred and based from its static triangles alone
     static_pts = np.array([pts_all[0][k] for i in static_ids for k in tris[i][0]])
     lo, hi = static_pts.min(axis=0), static_pts.max(axis=0)
     offset = np.array([(lo[0] + hi[0]) / 2.0, lo[1], (lo[2] + hi[2]) / 2.0])
+    shift = np.array([0.5, 0.0, 0.5])
+    if pivot_point is not None:
+        offset = to_xyz(np.array(pivot_point, dtype=np.float64))
+        shift = np.array([0.5, 0.5, 0.5])
+    if pivot_ids is not None:
+        offset = np.array([pts_all[0][k] for i in pivot_ids for k in tris[i][0]]).mean(axis=0)
+        shift = np.array([0.5, 0.5, 0.5])
+    use_shade = SHADE_FROM_TABLE if shade is None else shade
 
     def tf(p):
         return (p - offset) * blocks_per_unit            # blocks, x and z from the middle, y from the base
 
-    pts = np.array([tf(p) + np.array([0.5, 0.0, 0.5]) for p in pts_all[0]])
-    centre = np.array([tf(p) for p in static_pts]).mean(axis=0) + np.array([0.5, 0.0, 0.5])
+    pts = np.array([tf(p) + shift for p in pts_all[0]])
+    centre = np.array([tf(p) for p in static_pts]).mean(axis=0) + shift
 
     # the cells: one per static triangle (the pictures are small), packed in rows. The shading is the game's: every vertex has its own colour from the model's colour table and
     # a textured triangle is shaded smoothly between its three corners (Gouraud), the texel times that colour / 128; every texel of the beaker has the semi-transparency bit, so
@@ -190,7 +204,10 @@ def mesh_pack_files(vram, model, name, blocks_per_unit, frame=0, up=UP, animated
     vcols = ct.mesh_vertex_colours(model)
     cells = []
     for i in static_ids:
+        f = 1
         corner, tex, col, flags = tris[i]
+        if tri_override and i in tri_override:
+            tex = tri_override[i][0]
         lay = ct.layout_bytes(model, tex) if tex else None
         got = vram.texture_stp(lay) if lay else None
         if not tex:
@@ -205,11 +222,22 @@ def mesh_pack_files(vram, model, name, blocks_per_unit, frame=0, up=UP, animated
             c = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         else:
             img, stp = got
+            if not translucent:
+                stp = np.zeros_like(stp)
             c = struct.unpack("<BBHBBHBBBB", lay)
             umin, vmin = min(c[0], c[3], c[6], c[8]), min(c[1], c[4], c[7], c[9])
             uv_local = [(c[0] - umin, c[1] - vmin), (c[3] - umin, c[4] - vmin), (c[6] - umin, c[7] - vmin)]
-            cell = _bake(img, stp, uv_local, [_shade(table, vcols[k]) if SHADE_FROM_TABLE else np.ones(3) for k in corner], (c[5] >> 5) & 3)
-        cells.append((np.pad(cell, ((1, 1), (1, 1), (0, 0)), mode="edge"), c, img.shape[1], img.shape[0]))
+            if additive:
+                uv_local = [(a + 0.5, b + 0.5) for a, b in uv_local]         # the model's uv put a corner at the middle of its texel (see the vt lines below): shade where it is sampled
+            if smooth:
+                f = max(1, -(-smooth // min(img.shape[0], img.shape[1])))
+                if f > 1:
+                    img = np.kron(img, np.ones((f, f, 1), dtype=img.dtype))
+                    stp = np.kron(stp, np.ones((f, f), dtype=stp.dtype))
+                    uv_local = [(a * f, b * f) for a, b in uv_local]
+            g = gain[1] if (gain and i in gain[0]) else 1.0
+            cell = _bake(img, stp, uv_local, [x * g for x in ([np.array(x, dtype=np.float64) / 128.0 for x in tri_override[i][1]] if (tri_override and i in tri_override) else [np.zeros(3) if (rim_zero and i in rim_zero[1] and k in rim_zero[0]) else (_shade(table, vcols[k]) if use_shade else np.ones(3)) for k in corner])], (c[5] >> 5) & 3, additive)
+        cells.append((np.pad(cell, ((1, 1), (1, 1), (0, 0)), mode="edge"), c, f, img.shape[0]))
     width = 256
     x = y = row_h = 0
     place = []
@@ -227,7 +255,7 @@ def mesh_pack_files(vram, model, name, blocks_per_unit, frame=0, up=UP, animated
 
     turned = _outward([tuple(tris[i][0]) for i in static_ids], pts)
     v_lines, vt_lines, vn_lines, f_lines = [], [], [], []
-    for n, (i, (cell, c, w, h), (ox, oy)) in enumerate(zip(static_ids, cells, place)):
+    for n, (i, (cell, c, f, h), (ox, oy)) in enumerate(zip(static_ids, cells, place)):
         corner = tris[i][0]
         p3 = [pts[k] for k in corner]
         order = [0, 2, 1] if turned[n] else [0, 1, 2]              # wound outwards
@@ -241,7 +269,7 @@ def mesh_pack_files(vram, model, name, blocks_per_unit, frame=0, up=UP, animated
             for k in ord_:
                 u, v = uv[k]
                 v_lines.append("v %.5f %.5f %.5f" % tuple(p3[k]))
-                vt_lines.append("vt %.5f %.5f" % ((ox + 1 + (u - umin + 0.5)) / width, 1.0 - (oy + 1 + (v - vmin + 0.5)) / height))
+                vt_lines.append("vt %.5f %.5f" % ((ox + 1 + (u - umin + 0.5) * f) / width, 1.0 - (oy + 1 + (v - vmin + 0.5) * f) / height))
                 idx.append(len(v_lines))
             f_lines.append("f %d/%d/%d %d/%d/%d %d/%d/%d" % (idx[0], idx[0], len(vn_lines), idx[1], idx[1], len(vn_lines), idx[2], idx[2], len(vn_lines)))
     obj = ["# CTR %s from the owner's own disc (local use only)" % name, "mtllib %s.mtl" % name, "o %s" % name, "usemtl atlas"] + v_lines + vt_lines + vn_lines + f_lines

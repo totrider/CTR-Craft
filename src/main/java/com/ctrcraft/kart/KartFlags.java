@@ -19,7 +19,7 @@ public final class KartFlags {
     /** Burning past the sacred fire cap: only a super turbo pad does that in CTR, and we have none yet. */
     public static final int ULTRA = 128;
     /** The bits a client may set (anything else is dropped by the server). */
-    public static final int MASK = 0x3FFFFFFF;
+    public static final int MASK = 0xFFFFFFFF;
 
     public static int encode(KartSim sim) {
         int f = 0;
@@ -47,6 +47,15 @@ public final class KartFlags {
     /** The airborne pose: 0 none, 1 to 4 (see {@link com.ctrcraft.physics.AirTilt}). */
     public static int airTilt(int flags) {
         return (flags >> 27) & 7;
+    }
+
+    /** What the exhaust pipes show (bits 30 and 31): 0 no smoke, 1 bright additive, 2 dark (see {@link com.ctrcraft.physics.KartSim#exhaustMode}). */
+    public static int exhaust(int flags) {
+        return (flags >>> 30) & 3;
+    }
+
+    public static int withExhaust(int flags, int mode) {
+        return (flags & 0x3FFFFFFF) | ((mode & 3) << 30);
     }
 
     public static int fireSize(int flags) {

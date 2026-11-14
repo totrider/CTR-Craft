@@ -1,0 +1,29 @@
+{
+  "source": "blockbench/kart/kart_ctr.bbmodel, the exhaust_* cubes (tools/make_kart_ctr.py)",
+  "pipes": [
+    {
+      "tip": [
+        -0.28125,
+        0.55557,
+        0.59976
+      ],
+      "dir": [
+        0.0,
+        0.70711,
+        0.70711
+      ]
+    },
+    {
+      "tip": [
+        0.28125,
+        0.55557,
+        0.59976
+      ],
+      "dir": [
+        0.0,
+        0.70711,
+        0.70711
+      ]
+    }
+  ]
+}

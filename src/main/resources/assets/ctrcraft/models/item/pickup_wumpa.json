@@ -70,7 +70,8 @@
           ],
           "texture": "#pickups"
         }
-      }
+      },
+      "name": "body_0"
     },
     {
       "from": [
@@ -138,7 +139,8 @@
           ],
           "texture": "#pickups"
         }
-      }
+      },
+      "name": "body_1"
     },
     {
       "from": [
@@ -206,7 +208,8 @@
           ],
           "texture": "#pickups"
         }
-      }
+      },
+      "name": "body_1"
     },
     {
       "from": [
@@ -228,17 +231,9 @@
             12
           ],
           "texture": "#pickups"
-        },
-        "down": {
-          "uv": [
-            9,
-            12,
-            8,
-            14
-          ],
-          "texture": "#pickups"
         }
       },
+      "name": "leaves_0",
       "rotation": {
         "origin": [
           4.9,
@@ -270,17 +265,9 @@
             14
           ],
           "texture": "#pickups"
-        },
-        "down": {
-          "uv": [
-            9,
-            14,
-            10.5,
-            12
-          ],
-          "texture": "#pickups"
         }
       },
+      "name": "leaves_1",
       "rotation": {
         "origin": [
           6.8503,
@@ -312,17 +299,9 @@
             12
           ],
           "texture": "#pickups"
-        },
-        "down": {
-          "uv": [
-            10.5,
-            12,
-            9,
-            14
-          ],
-          "texture": "#pickups"
         }
       },
+      "name": "leaves_2",
       "rotation": {
         "origin": [
           9.1497,
@@ -354,7 +333,134 @@
             14
           ],
           "texture": "#pickups"
-        },
+        }
+      },
+      "name": "leaves_3",
+      "rotation": {
+        "origin": [
+          11.1,
+          5.75,
+          10.025
+        ],
+        "axis": "z",
+        "angle": -45,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        3.775,
+        5.71,
+        3.975
+      ],
+      "to": [
+        6.025,
+        5.71,
+        7.975
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            9,
+            12,
+            8,
+            14
+          ],
+          "texture": "#pickups"
+        }
+      },
+      "name": "leaves_0_back",
+      "rotation": {
+        "origin": [
+          4.9,
+          5.71,
+          5.975
+        ],
+        "axis": "z",
+        "angle": 45,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        5.6003,
+        6.0271,
+        3.975
+      ],
+      "to": [
+        8.1003,
+        6.0271,
+        7.975
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            9,
+            14,
+            10.5,
+            12
+          ],
+          "texture": "#pickups"
+        }
+      },
+      "name": "leaves_1_back",
+      "rotation": {
+        "origin": [
+          6.8503,
+          6.0271,
+          5.975
+        ],
+        "axis": "z",
+        "angle": -22.5,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        7.8997,
+        6.0271,
+        8.025
+      ],
+      "to": [
+        10.3997,
+        6.0271,
+        12.025
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            10.5,
+            12,
+            9,
+            14
+          ],
+          "texture": "#pickups"
+        }
+      },
+      "name": "leaves_2_back",
+      "rotation": {
+        "origin": [
+          9.1497,
+          6.0271,
+          10.025
+        ],
+        "axis": "z",
+        "angle": 22.5,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        9.975,
+        5.71,
+        8.025
+      ],
+      "to": [
+        12.225,
+        5.71,
+        12.025
+      ],
+      "faces": {
         "down": {
           "uv": [
             8,
@@ -365,10 +471,11 @@
           "texture": "#pickups"
         }
       },
+      "name": "leaves_3_back",
       "rotation": {
         "origin": [
           11.1,
-          5.75,
+          5.71,
           10.025
         ],
         "axis": "z",

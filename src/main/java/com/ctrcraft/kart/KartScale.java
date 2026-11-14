@@ -4,13 +4,19 @@ import com.ctrcraft.physics.FixedMath;
 
 /**
  * The one place that ties CTR's level units (lu) to Minecraft blocks, and CTR's angles to Minecraft's yaw.
- * Nothing in the code converts lu to meters (spec section 0); 50 lu = 1 block makes the 25 lu collision sphere exactly
- * one block wide, a hop about 0.9 of a block high and the Balanced top speed about 31 blocks/s.
+ * Nothing in the code converts lu to meters (spec section 0). The MECHANICS (the kart's physics, the weapons' speeds and hit radii, the pickups' reach) are in lu and live at
+ * {@link #LU_PER_BLOCK} = 108.8 / 1.5 = 72.53 lu to the block: the kart's model is drawn 3:2 to the crates' scale (a crate is 108.8 lu and one block), which is what fits a
+ * Minecraft player in it. The Balanced top speed (78 lu a frame) is then 32 blocks a second and the 25 lu collision sphere 0.34 block in radius. The VISUALS of the pickups,
+ * the beakers and the bomb stay at the crates' scale ({@link #CRATE_LU}, one block): they are 2/3 of the size the mechanics, which are the original's own numbers against the
+ * kart, give them, so a crate is taken from a little before the kart touches it.
  */
 public final class KartScale {
     private KartScale() {}
 
-    public static final double LU_PER_BLOCK = 50.0;
+    /** A crate's width in lu: one block, the scale of every pickup, beaker and bomb picture. */
+    public static final double CRATE_LU = 108.8;
+    /** The mechanics' scale: the kart's model is 3:2 to the crates. */
+    public static final double LU_PER_BLOCK = CRATE_LU / 1.5;
 
     public static double toLu(double blocks) {
         return blocks * LU_PER_BLOCK;

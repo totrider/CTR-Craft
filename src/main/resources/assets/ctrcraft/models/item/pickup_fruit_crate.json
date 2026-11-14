@@ -70,7 +70,8 @@
           ],
           "texture": "#pickups"
         }
-      }
+      },
+      "name": "cube_0"
     }
   ],
   "display": {

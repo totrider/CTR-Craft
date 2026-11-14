@@ -176,7 +176,7 @@ public final class ItemHud {
             g.fill(bx - o, by - o, bx + bw + o, by + bh + o, 0xE00A1030);
             g.fill(bx, by, bx + bw, by + bh, 0xA0303C78);
             ResourceLocation icon = icon(shown);
-            if (icon == null || !GuiTextures.drawStretched(g, icon, ix, iy, iw, ih)) {
+            if (icon == null || !GuiTextures.drawFit(g, icon, ix, iy, iw, ih)) {
                 String name = ItemManager.nameOf(shown).getString();
                 g.drawString(mc.font, name, bx, by + bh / 2 - 4, rolling ? 0xFFB8B0C8 : 0xFFFFFFFF, true);
             }

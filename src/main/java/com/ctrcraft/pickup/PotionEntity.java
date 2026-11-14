@@ -38,8 +38,8 @@ public class PotionEntity extends Entity implements MinePool.Mine {
     private static final double TERMINAL = -96.0;
     /** A game tick is 1.5 frames of the original. */
     private static final double FRAMES_PER_TICK = 1.5;
-    private static final double LU = 50.0;
-    private static final double HIT_RADIUS = 1.6;           // sqrt(0x1900) = 80 lu
+    private static final double LU = com.ctrcraft.kart.KartScale.LU_PER_BLOCK;
+    private static final double HIT_RADIUS = 80.0 / LU;      // sqrt(0x1900) = 80 lu
     private static final int OWNER_SPARED_TICKS = 7;        // MINE_PARENT_SAFETY_FRAMES
 
     private String pool;

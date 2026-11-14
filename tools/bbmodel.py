@@ -140,7 +140,8 @@ def read(path):
         model = json.load(f)
     slot_ids = [t.get("id") or str(i) for i, t in enumerate(model.get("textures", []))]
     slots = {t.get("id") or str(i): t.get("relative_path", "") for i, t in enumerate(model.get("textures", []))}
-    by_uuid = {e["uuid"]: _from_bb_element(e, slot_ids) for e in model.get("elements", [])}
+    by_uuid = {e["uuid"]: _from_bb_element(e, slot_ids) for e in model.get("elements", []) if e.get("export", True)}      # an element with export off is a guide, not geometry
+    group_info = {g.get("uuid"): g for g in model.get("groups", []) if isinstance(g, dict)}
     groups = {}
 
     def collect(nodes, group):
@@ -149,7 +150,10 @@ def read(path):
                 if node in by_uuid:
                     groups.setdefault(group, []).append(by_uuid[node])
             else:                                          # a (sub)group: its name, or the outer one for a nested group
-                collect(node.get("children", []), node.get("name") if not group else group)
+                info = group_info.get(node.get("uuid"), {})
+                if node.get("export", info.get("export", True)) is False:
+                    continue                                   # a group with export off (guides) is left out whole
+                collect(node.get("children", []), node.get("name", info.get("name")) if not group else group)
     collect(model.get("outliner", []), "")
     for gname in list(groups):
         pass
@@ -172,6 +176,8 @@ def _from_bb_element(e, slot_ids):
             out["rotation"] = f["rotation"]
         faces[face] = out
     el = {"from": [_clean(c) for c in e["from"]], "to": [_clean(c) for c in e["to"]], "faces": faces}
+    if e.get("name"):
+        el["name"] = str(e["name"])
     rot = e.get("rotation") or [0, 0, 0]
     if any(rot):
         axis = "xyz"[[i for i, v in enumerate(rot) if v][0]]

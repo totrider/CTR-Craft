@@ -36,7 +36,57 @@ GOLD = (225, 170, 40, 255)
 DGOLD = (150, 100, 20, 255)
 
 
+SCALE = 2.0 / 3.0                 # the icons are drawn on the original's 32 x 48 grid and put on a 32 x 32 canvas at two thirds, so they have the pixel size of the mod's other pictures
+OX = 5
+
+
+class SD:
+    """An ImageDraw that takes the 32 x 48 grid's coordinates and draws them at {@link SCALE} (crisp: the shapes are drawn at the small size, not shrunk afterwards)."""
+
+    def __init__(self, im):
+        self.d = ImageDraw.Draw(im)
+
+    @staticmethod
+    def _flat(c):
+        out = []
+        for v in c:
+            if isinstance(v, (tuple, list)):
+                out += [v[0], v[1]]
+            else:
+                out.append(v)
+        return out
+
+    def _pts(self, c):
+        f = self._flat(c)
+        return [round(f[i] * SCALE) + (OX if i % 2 == 0 else 0) for i in range(len(f))]
+
+    def _box(self, c):
+        x0, y0, x1, y1 = self._pts(c)
+        return [x0, y0, max(x0, x1), max(y0, y1)]
+
+    def ellipse(self, box, **kw):
+        self.d.ellipse(self._box(box), **kw)
+
+    def rectangle(self, box, **kw):
+        self.d.rectangle(self._box(box), **kw)
+
+    def rounded_rectangle(self, box, radius=0, **kw):
+        self.d.rounded_rectangle(self._box(box), radius=max(1, round(radius * SCALE)), **kw)
+
+    def polygon(self, pts, **kw):
+        self.d.polygon(self._pts(pts), **kw)
+
+    def line(self, pts, width=1, **kw):
+        self.d.line(self._pts(pts), width=max(1, round(width * SCALE)), **kw)
+
+    def point(self, pts, **kw):
+        self.d.point(self._pts(pts), **kw)
+
+
 def canvas(w=32, h=48):
+    if (w, h) == (32, 48):
+        im = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+        return im, SD(im)
     im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     return im, ImageDraw.Draw(im)
 
@@ -60,7 +110,7 @@ def turbo():
 
 
 def bomb_at(im, cx, cy, r):
-    d = ImageDraw.Draw(im)
+    d = SD(im)
     d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=DBLUE, outline=OUT)
     d.ellipse([cx - r + 2, cy - r + 2, cx - r + 2 + r // 2, cy - r + 2 + r // 2], fill=BLUE)
     # a skull
@@ -82,7 +132,7 @@ def bomb():
 
 def rocket_at(im, cx, cy, s):
     """A tracking missile pointing down: light body, dark nose, green fins and flame at the top."""
-    d = ImageDraw.Draw(im)
+    d = SD(im)
 
     def p(x, y):
         return (cx + x * s, cy + y * s)
@@ -231,24 +281,63 @@ def super_engine():
 
 
 def wumpa():
-    """The Wumpa fruit sprite, 48 x 32: green on top, through yellow and orange to red below, a leaf on top."""
-    im, d = canvas(48, 32)
-    mask = Image.new("L", (48, 32), 0)
-    ImageDraw.Draw(mask).ellipse([6, 5, 42, 31], fill=255)
+    """The Wumpa fruit sprite, 32 x 32: red on top, through orange and yellow to green below, a leaf on top."""
+    im, d = canvas(32, 32)
+    mask = Image.new("L", (32, 32), 0)
+    ImageDraw.Draw(mask).ellipse([3, 5, 29, 31], fill=255)
+    stops = ((0.0, (205, 55, 40)), (0.35, (250, 150, 45)), (0.6, (250, 210, 50)), (1.0, (130, 195, 60)))
     for y in range(32):
         t = min(1.0, max(0.0, (y - 5) / 26.0))
-        stops = ((0.0, (150, 200, 60)), (0.3, (250, 210, 50)), (0.6, (250, 140, 40)), (1.0, (200, 50, 35)))
+        col = stops[0][1] + (255,)
         for (t0, c0), (t1, c1) in zip(stops, stops[1:]):
             if t0 <= t <= t1:
                 u = (t - t0) / (t1 - t0)
                 col = tuple(int(c0[i] + (c1[i] - c0[i]) * u) for i in range(3)) + (255,)
-        for x in range(48):
+        for x in range(32):
             if mask.getpixel((x, y)):
                 im.putpixel((x, y), col)
-    d.ellipse([6, 5, 42, 31], outline=(120, 50, 20, 255))
-    d.ellipse([12, 10, 20, 17], fill=(255, 235, 150, 255))
-    d.polygon([(24, 6), (17, 1), (27, 2)], fill=GREEN, outline=DGREEN)
-    d.polygon([(24, 6), (32, 1), (33, 8)], fill=GREEN, outline=DGREEN)
+    d.ellipse([3, 5, 29, 31], outline=(120, 50, 20, 255))
+    d.ellipse([8, 10, 13, 15], fill=(255, 235, 150, 255))
+    d.polygon([(16, 6), (10, 1), (18, 2)], fill=GREEN, outline=DGREEN)
+    d.polygon([(16, 6), (22, 1), (23, 8)], fill=GREEN, outline=DGREEN)
+    return im
+
+
+def tnt_juiced():
+    """The juiced TNT: the creeper-themed crate (green, with the face), corner-on like the plain one."""
+    im, d = canvas()
+    d.polygon([(16, 6), (30, 13), (16, 20), (2, 13)], fill=(150, 225, 120, 255), outline=OUT)
+    d.polygon([(2, 13), (16, 20), (16, 44), (2, 36)], fill=DGREEN, outline=OUT)
+    d.polygon([(16, 20), (30, 13), (30, 36), (16, 44)], fill=GREEN, outline=OUT)
+    # the creeper's face on the right side: two eyes and the frown
+    d.polygon([(19, 22), (23, 20), (23, 24), (19, 26)], fill=BLACK)
+    d.polygon([(25, 19), (28, 17), (28, 21), (25, 23)], fill=BLACK)
+    d.polygon([(21, 28), (27, 25), (27, 28), (25, 29), (25, 33), (23, 34), (23, 30), (21, 31)], fill=BLACK)
+    d.line([(16, 6), (19, 2)], fill=BROWN, width=2)
+    d.ellipse([18, 0, 22, 4], fill=LGREEN)
+    return im
+
+
+def potion_juiced():
+    """The juiced beaker: the same flask with red potion."""
+    im, d = canvas()
+    d.polygon([(12, 6), (20, 6), (20, 18), (28, 40), (4, 40), (12, 18)], fill=(215, 235, 245, 255), outline=OUT)
+    d.polygon([(10, 26), (22, 26), (28, 40), (4, 40)], fill=RED)
+    d.polygon([(10, 26), (22, 26), (24, 30), (8, 30)], fill=(245, 130, 120, 255))
+    d.rectangle([11, 3, 21, 7], fill=BROWN, outline=OUT)
+    d.line([(9, 38), (24, 38)], fill=DRED)
+    for bx, by, br in ((13, 34, 2), (19, 30, 1), (17, 14, 2), (14, 9, 1)):
+        d.ellipse([bx - br, by - br, bx + br, by + br], fill=(255, 170, 160, 255), outline=DRED)
+    return im
+
+
+def shield_juiced():
+    """The juiced shield: a bigger, glossy red bubble with a glint."""
+    im, d = canvas()
+    d.ellipse([1, 2, 31, 47], fill=(170, 40, 40, 255), outline=OUT)
+    d.ellipse([4, 6, 28, 43], fill=(235, 80, 70, 255))
+    d.ellipse([8, 10, 16, 25], fill=(255, 215, 200, 255))
+    d.ellipse([21, 34, 26, 42], fill=(255, 150, 140, 255))
     return im
 
 
@@ -273,6 +362,7 @@ def lamp(colour, lit):
 ICONS = {
     "turbo": turbo, "bomb": bomb, "missile": missile, "tnt": tnt, "potion": potion, "spring": spring, "shield": shield, "mask": mask,
     "clock": clock, "warpball": warpball, "bomb_3x": bomb_3x, "missile_3x": missile_3x, "invisibility": invisibility, "super_engine": super_engine,
+    "tnt_juiced": tnt_juiced, "potion_juiced": potion_juiced, "shield_juiced": shield_juiced,
 }
 
 

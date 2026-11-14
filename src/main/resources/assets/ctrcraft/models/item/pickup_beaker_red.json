@@ -70,7 +70,8 @@
           ],
           "texture": "#beaker"
         }
-      }
+      },
+      "name": "bulb_0"
     },
     {
       "from": [
@@ -138,7 +139,8 @@
           ],
           "texture": "#beaker"
         }
-      }
+      },
+      "name": "bulb_1"
     },
     {
       "from": [
@@ -206,7 +208,8 @@
           ],
           "texture": "#beaker"
         }
-      }
+      },
+      "name": "bulb_2"
     },
     {
       "from": [
@@ -274,7 +277,8 @@
           ],
           "texture": "#beaker"
         }
-      }
+      },
+      "name": "bulb_3"
     },
     {
       "from": [
@@ -342,7 +346,8 @@
           ],
           "texture": "#beaker"
         }
-      }
+      },
+      "name": "neck_0"
     },
     {
       "from": [
@@ -410,7 +415,8 @@
           ],
           "texture": "#beaker"
         }
-      }
+      },
+      "name": "lip_0"
     }
   ],
   "display": {

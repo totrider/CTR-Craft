@@ -38,7 +38,7 @@ public class TntEntity extends Entity implements MinePool.Mine {
     /** The dropper cannot trigger it for this long, game ticks. */
     private static final int OWNER_SPARED_TICKS = 7;          // MINE_PARENT_SAFETY_FRAMES: 10 frames at 30 Hz
     /** RB_GenericMine_ThTick: a kart whose centre is within sqrt(0x3840) = 120 lu (2.4 blocks) of the crate, in 3D, is hit. */
-    private static final double HIT_RADIUS = 2.4;
+    private static final double HIT_RADIUS = 120.0 / com.ctrcraft.kart.KartScale.LU_PER_BLOCK;      // 120 lu, as it was at 50 lu a block (2.4)
     /** A crate nobody hits goes away after this long (a minute), game ticks. */
     private static final int LIFETIME_TICKS = 1200;
 

@@ -1,5 +1,5 @@
 """
-Take the racers' models (the kart body and the driver in one, from the shared model pack) and the wheel sprites out of YOUR OWN disc image for inspection, and measure them.
+Take the racers' models (the kart body and the driver in one: the high detail ones, BIGFILE 242-257) and the wheel sprites out of YOUR OWN disc image for inspection, and measure them.
 
   python tools/inspect_ctr_kart.py                      (finds the disc image in the project folder)
 
@@ -27,6 +27,7 @@ import extract_ctr_sounds as sounds  # noqa: E402
 
 RACERS = ["crash", "cortex", "tiny", "coco", "ngin", "dingo", "polar", "pura", "pinstripe", "papu", "roo", "joe", "ntropy", "pen", "fake", "oxide"]
 BLOCK = 108.8
+RACER_HI = 242              # BIGFILE index of the first high detail racer model (BI_RACERMODELHI; medium 308, low 332)
 
 
 def steering_report(model):
@@ -63,7 +64,10 @@ def main():
     vram = ct.Vram()
     vram.load(big.read(ct.SHARED_VRM))
     mpk = big.read(ct.SHARED_MPK)
-    models = ct.pack_models(mpk)
+    models = {}
+    for i in range(16):                                  # BI_RACERMODELHI: one file per racer (the high detail model, ~270 triangles); the shared pack's are the lowest detail
+        for name, m in ct.pack_models(big.read(RACER_HI + i)).items():
+            models[name] = m
     report = ["Racers (model pack), the middle steering frame; units are level units, 108.8 to a block (a crate). x across, y up, z along (the front is +z in the file)."]
     for name in RACERS:
         if name not in models:

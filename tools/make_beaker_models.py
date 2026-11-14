@@ -110,13 +110,13 @@ def draw_bubbles(colour):
 
 
 def bubble_data(colour):
-    """A generic rise through the flask: each bubble climbs from the liquid to the lip over the fifteen frames, quickly at first (as the original's do), and starts over."""
+    """A generic rise through the flask: each bubble climbs from the liquid up the neck and out of the lip over the fifteen frames, quickly at first (as the original's do), and starts over."""
     out = []
     for phase, x, z, size, bright in BUBBLES:
         centres = []
         for f in range(FRAMES):
             tt = ((f + phase) % FRAMES) / (FRAMES - 1.0)
-            centres.append([x, round(0.14 + 0.68 * (1.0 - (1.0 - tt) ** 2), 4), z])
+            centres.append([x * (1.0 if tt < 0.55 else 0.5), round(0.14 + 0.90 * (1.0 - (1.0 - tt) ** 2), 4), z * (1.0 if tt < 0.55 else 0.5)])   # up through the neck and out past the lip (0.92 of the block) before it starts over
         out.append({"uv": [0.5, 0.0, 1.0, 1.0] if bright else [0.0, 0.0, 0.5, 1.0], "width": size, "height": size, "centres": centres})
     return {"frames": FRAMES, "texture": "ctrcraft:textures/entity/beaker_%s_bubbles.png" % colour, "bubbles": out}
 

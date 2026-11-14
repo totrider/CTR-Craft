@@ -20,7 +20,7 @@ public final class ModEntities {
      */
     public static final DeferredHolder<EntityType<?>, EntityType<KartEntity>> KART = ENTITIES.register("kart", () ->
             EntityType.Builder.<KartEntity>of(KartEntity::new, MobCategory.MISC)
-                    .sized(0.7F, 0.5F).passengerAttachments(0.2F).clientTrackingRange(16).updateInterval(1)
+                    .sized(1.2F, 0.7F).passengerAttachments(0.2F).clientTrackingRange(16).updateInterval(1)
                     .build("kart"));
 
     /** A fruit or crate waiting at a pickup spot (never saved; the spot makes it). */

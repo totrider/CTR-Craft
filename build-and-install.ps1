@@ -24,6 +24,10 @@ if ($javaw) {
 if (Get-Command python -ErrorAction SilentlyContinue) {
     Write-Host "Generating model and sounds..." -ForegroundColor Cyan
     cmd /c "python tools\make_kart.py 2>&1"
+    cmd /c "python tools\make_kart_ctr.py 2>&1"
+    cmd /c "python tools\make_kart_wheel.py 2>&1"
+    cmd /c "python tools\make_boost_flame.py 2>&1"
+    cmd /c "python tools\make_kart_shadow.py 2>&1"
     cmd /c "python tools\make_boost_pad.py 2>&1"
     cmd /c "python tools\make_track_items.py 2>&1"
     cmd /c "python tools\make_pickup_spots.py 2>&1"
@@ -31,7 +35,8 @@ if (Get-Command python -ErrorAction SilentlyContinue) {
     cmd /c "python tools\make_pickup_models.py 2>&1"
     cmd /c "python tools\make_beaker_models.py 2>&1"
     cmd /c "python tools\make_power_icons.py 2>&1"
-    cmd /c "python tools\make_bomb_sprites.py 2>&1"
+    cmd /c "python tools\make_bomb_model.py 2>&1"
+    cmd /c "python tools\make_tnt_models.py 2>&1"
     cmd /c "python tools\make_burst_sprites.py 2>&1"
     cmd /c "python tools\make_crate_break.py 2>&1"
     cmd /c "python tools\make_track_overlays.py 2>&1"

@@ -201,7 +201,7 @@ public final class KartHud {
         rect(vc, m, x0, y0, x1, y1, 0xFF808080);                                   // empty
         if (length > 0) {
             // UI_SLIDE_METER_WAIT_COLOR green while there is room, _READY_COLOR red once a press would boost
-            rect(vc, m, x0, y0, s.x(490 - 49 + length), y1, room > KartSim.slideMeterLowRoom() ? 0xFF00FF00 : 0xFFFF0000);
+            rect(vc, m, s.x(490 - length), y0, x1, y1, room > KartSim.slideMeterLowRoom() ? 0xFF00FF00 : 0xFFFF0000);       // from the right edge leftwards: leftX = posX - length
         }
         wireBox(vc, m, s, x0, y0, x1, y1);                                         // the black outline over the edge of the fill
     }

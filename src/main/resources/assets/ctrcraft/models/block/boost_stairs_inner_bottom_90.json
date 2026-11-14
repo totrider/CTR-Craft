@@ -72,7 +72,8 @@
           ],
           "texture": "#side"
         }
-      }
+      },
+      "name": "stairs_0"
     },
     {
       "from": [
@@ -131,7 +132,8 @@
           ],
           "texture": "#side"
         }
-      }
+      },
+      "name": "stairs_1"
     },
     {
       "from": [
@@ -190,7 +192,8 @@
           ],
           "texture": "#side"
         }
-      }
+      },
+      "name": "stairs_2"
     },
     {
       "from": [
@@ -259,7 +262,8 @@
           ],
           "texture": "#side"
         }
-      }
+      },
+      "name": "stairs_3"
     },
     {
       "from": [
@@ -328,7 +332,8 @@
           ],
           "texture": "#side"
         }
-      }
+      },
+      "name": "stairs_4"
     }
   ]
 }

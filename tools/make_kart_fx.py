@@ -52,8 +52,7 @@ def puff(frame):
             edge = r0 * radii[int((ang + math.pi) / (2 * math.pi) * 16) % 16]
             if r <= edge:
                 core = max(0.0, 1.0 - r / edge)
-                s = int(shade * (0.62 + 0.38 * core))
-                px[x, y] = (s, s, s, int(235 * min(1.0, (edge - r) / 1.6 + 0.35)))
+                px[x, y] = (255, 255, 255, int(235 * min(1.0, (edge - r) / 1.6 + 0.35) * (0.55 + 0.45 * core)))        # a white mask: the game colours it
     return im
 
 
@@ -83,12 +82,26 @@ def smoke_ring():
     return im
 
 
+def skid_mark():
+    """A piece of tyre mark: black, soft at both sides, with a tread of short bars (u across the mark, v along it)."""
+    n = 16
+    im = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    px = im.load()
+    for y in range(n):
+        for x in range(n):
+            across = abs((x + 0.5) / (n / 2.0) - 1.0)
+            edge = max(0.0, min(1.0, (1.0 - across) / 0.28))
+            tread = 1.0 if (y // 2) % 2 == 0 else 0.78
+            a = int(255 * edge * tread)
+            if a > 0:
+                px[x, y] = (0, 0, 0, a)
+    return im
+
+
 def main():
     os.makedirs(os.path.join(ASSETS, "entity"), exist_ok=True)
     os.makedirs(os.path.join(ASSETS, "particle"), exist_ok=True)
-    path = os.path.join(ASSETS, "entity", "kart_shadow.png")
-    if not os.path.exists(path):
-        shadow().save(path)
+    # (the kart's shadow is made from its model by tools/make_kart_shadow.py)
     for i in range(5):
         path = os.path.join(ASSETS, "particle", "dust_puff_%d.png" % i)
         if not os.path.exists(path):
@@ -96,6 +109,9 @@ def main():
     path = os.path.join(ASSETS, "particle", "clod.png")
     if not os.path.exists(path):
         clod().save(path)
+    path = os.path.join(ASSETS, "particle", "skid_mark.png")
+    if not os.path.exists(path):
+        skid_mark().save(path)
     path = os.path.join(ASSETS, "particle", "smoke_ring.png")
     if not os.path.exists(path):
         smoke_ring().save(path)

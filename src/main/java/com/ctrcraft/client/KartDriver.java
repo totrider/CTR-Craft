@@ -345,7 +345,18 @@ public final class KartDriver {
     }
 
     private static int visualFlags() {
-        return KartFlags.encode(sim);
+        // the exhaust: on the grid the revving engine decides (VehEmitter: its state busy none, ready dark, below the acceleration speed bright), otherwise the powerslide meter and the flame
+        int mode;
+        if (rev != null) {
+            mode = switch (rev.state()) {
+                case BUSY -> 0;
+                case READY -> 2;
+                default -> 1;
+            };
+        } else {
+            mode = sim.exhaustMode();
+        }
+        return KartFlags.withExhaust(KartFlags.encode(sim), mode);
     }
 
     private static int engineData() {

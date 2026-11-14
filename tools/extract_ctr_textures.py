@@ -32,6 +32,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ctr_disc_textures as ct  # noqa: E402
+import ctr_bomb  # noqa: E402  (the bomb as a 3D model)
 import ctr_mesh_pack  # noqa: E402  (a model as an OBJ for a local pack)
 import render_ctr_model as rm  # noqa: E402
 import extract_ctr_sounds as sounds  # noqa: E402  (the disc reader)
@@ -215,12 +216,28 @@ def full_burst(quarter):
 
 
 def dust_puff(img):
-    """An original dust puff picture for the particle: its black backdrop (additive blending in the game, so black adds nothing) is transparent."""
-    a = np.array(img)
-    black = a[:, :, :3].max(axis=2) < 12
-    a[black] = (0, 0, 0, 0)
-    a[~black, 3] = 235
-    return Image.fromarray(a, "RGBA")
+    """An original dust puff picture as a particle mask: the game draws its puffs with the picture's brightness added to (or taken from) the screen, so the brightness IS the amount: the
+    mask is white with the brightness as its alpha, smoothed up to 64 x 64 (the particle sheet is point filtered), so the game can colour it (dust, dark exhaust smoke, bright boost smoke)
+    and alpha blend it, instead of showing the grey picture itself with its dark edges."""
+    a = np.array(img.convert("RGBA")).astype(np.float64)
+    lum = a[:, :, :3].max(axis=2) / 255.0
+    lum = np.where(a[:, :, 3] > 0, lum, 0.0)
+    mask = Image.fromarray((np.clip(lum, 0, 1) * 255).astype(np.uint8), "L").resize((64, 64), Image.BICUBIC)
+    alpha = np.clip(np.array(mask).astype(np.float64) * 1.25, 0, 255).astype(np.uint8)
+    out = np.zeros((64, 64, 4), dtype=np.uint8)
+    out[:, :, :3] = 255
+    out[:, :, 3] = alpha
+    return Image.fromarray(out, "RGBA")
+
+
+def tire_mark(img):
+    """The original's tyre mark (the icon "tread", global icon 0x2f: 4 texels across, 16 along, stripes of grey from 74 to 205): the game draws it subtractively (texture page blend
+    mode 2), so the grey is how much light a stripe takes away; as a particle sprite it is black with the grey as its alpha, scaled up with hard edges (16 x 64) so the stripes stay."""
+    a = np.array(img.convert("RGBA")).astype(np.float64)
+    grey = a[:, :, :3].max(axis=2) / 255.0
+    out = np.zeros(a.shape, dtype=np.uint8)
+    out[:, :, 3] = np.clip(grey * 1.2, 0, 1) * 255
+    return Image.fromarray(out, "RGBA").resize((img.width * 4, img.height * 4), Image.NEAREST)
 
 
 def kart_shadow(top, bottom):
@@ -358,8 +375,8 @@ def main():
         # the lettering runs up the model's sides (the same picture is on all six faces): the side is turned a quarter so it reads along the face of the cube
         crates[key] = {"side": rm.render_view(pm, 0, 0, 96, fit_bbox=True).transpose(Image.ROTATE_270), "top": rm.render_view(pm, 0, 90, 96, fit_bbox=True),
                        "bottom": rm.render_view(pm, 0, -90, 96, fit_bbox=True)}
-    # the bomb rolling: 16 pictures of one turn about its axle from each of 8 camera azimuths (rm.roll_atlas), 64 px each; the mod draws it as a billboard
-    bomb_roll = rm.roll_atlas(rm.Prepared(vram, pack["bomb"], up=1), 64)
+    # the bomb as a 3D model (the ball and the fuse), its spark as a picture and a place at the fuse's tip (tools/ctr_bomb.py)
+    bomb_3d = ctr_bomb.bomb_files(vram, pack["bomb"], rm)
     wumpa = icon(WUMPA_ICON)
     # the HUD shine: the quarter burst exactly as the game has it (it draws it four times mirrored, with gouraud colours and the PS1's colour / 128 modulation: ItemHud does
     # that). The texel grey runs 0 to 189, and the last texel column is empty: trimmed, so the mirrored quarters meet without a seam
@@ -370,6 +387,7 @@ def main():
     burst_square.alpha_composite(burst, (0, (burst.width - burst.height) // 2))
     lamps = {k: icon(n) for k, n in LAMPS.items()}
     puffs = [dust_puff(to_image(vram.texture(icon_table["dustpuff0%d" % i]))) for i in range(5)]
+    skid = tire_mark(to_image(vram.texture(icon_table["tread"])))
     # the arrangement whose seam matches (found by comparing the edges of the pictures): shadow2 upside down above shadow1
     clod = dust_puff(to_image(vram.texture(icon_table["clod"])))
     ring = dust_puff(to_image(vram.texture(icon_table["smokering"])))
@@ -393,11 +411,11 @@ def main():
                        "bottom": rm.render_view(pm, 0, -90, 96, fit_bbox=True)}
     print("crate faces: %dx%d and %dx%d" % (question.width, question.height, planks.width, planks.height))
 
-    # the bomb's rolling pictures and the burst effects: the same for both packs (their sizes are not the crates' or icons' scale)
-    bomb_files = {"textures/entity/bomb_roll.png": bomb_roll,
-                  "textures/gui/glow.png": shine,
+    # the 3D bomb with its spark, and the burst effects: the same for both packs (their sizes are not the crates' or icons' scale)
+    bomb_files = {"textures/gui/glow.png": shine,
                   "textures/gui/glow.png.mcmeta": {"texture": {"blur": True, "clamp": True}},        # smooth, and no wrapping round the edge (that draws lines)
                   "textures/particle/burst.png": burst_square}
+    bomb_files.update(bomb_3d)
     # N. Brio's Beakers, the original meshes (frame 0 of the bubble animation) as 3D models: an OBJ and an atlas each, loaded by NeoForge's OBJ loader. The level is 108.8 units
     # to the block, as the crates are (one block); the beaker comes out 0.91 blocks tall
     beaker_files = {}
@@ -406,6 +424,34 @@ def main():
     # the Wumpa fruit placed in the world as a 3D model, too (Crash Cove's level file; untextured, Gouraud shaded: baked into the atlas): the leaves are double sided. It replaces the
     # animated sprite in the pickup model; the sprite strip stays for the HUD
     wumpa_files = ctr_mesh_pack.mesh_pack_files(vram, models["fruit"], "wumpa", 1.0 / 108.8, up=2, animated=False, honour_cull=True)
+    # the boost flame (VehTurbo): eight models (STATIC_TURBO_EFFECT and the seven after it, the same shape with another picture each: a flame that crawls), a cone of rays that the game draws
+    # in the kart's frame at the exhausts, the second one mirrored. Origin at the middle of the cone's base ring (9, 56, 0); added to the screen in the game (additive): see ctr_mesh_pack.
+    flame_files = {}
+    for k, mname in enumerate(["turbo"] + ["turbo%d" % i for i in range(1, 8)]):
+        fm = pack[mname]
+        # the shell's triangles are drawn SUBTRACTIVELY (the texture page's blend mode 2: the picture takes light away, which leaves the red and orange), the spike's and the rest added
+        subs = [i for i, (cn, tx, cl, fl) in enumerate(ct.mesh_triangles(fm)) if tx and ((struct.unpack("<BBHBBHBBBB", ct.layout_bytes(fm, tx))[5] >> 5) & 3) == 2]
+        others = [i for i in range(len(ct.mesh_triangles(fm))) if i not in subs]
+        # the outer ring (every vertex more than 25 units from the hot core) is where the shell and the cone end: black there, so the whole rim fades out the same all the way round (the table gives
+        # some of its vertices a little light and others none, which left a solid edge on one side)
+        core = np.array([-0.4, 66.0, -63.75])
+        verts = np.array(ct.mesh_vertices(fm, 0))
+        rim = set(int(k) for k in range(len(verts)) if np.linalg.norm(verts[k] - core) > 25.0)
+        shell_ids = set(subs) | set(i for i, (cn, tx, cl, fl) in enumerate(ct.mesh_triangles(fm)) if tx and (struct.unpack("<BBHBBHBBBB", ct.layout_bytes(fm, tx))[5] & 31) == 0x0e)
+        # the shell's own 12 triangles leave 4 gaps in the funnel (thin slivers the 16 triangles of the cone cover but the shell does not): in the game they read as pale rays. Here the shell also
+        # covers them, with the shell's flat picture and its colours (teal at the hot core, black at the rim), so the cone is one colour all over
+        pos = lambda tri: sorted(tuple(int(round(x)) for x in verts[k]) for k in ct.mesh_triangles(fm)[tri][0])
+        covered = set(tuple(pos(i)) for i in subs)
+        gaps = []          # the game's own 12 shell triangles leave 4 gaps over the cone: they read as pale thin rays, which are part of the effect's shine (kept)
+        flat_tex = ct.mesh_triangles(fm)[subs[0]][1]
+        override = {}
+        for i in gaps:
+            corners = ct.mesh_triangles(fm)[i][0]
+            override[i] = (flat_tex, [(20, 60, 80) if np.linalg.norm(verts[k] - core) <= 25.0 else (0, 0, 0) for k in corners])
+        for tag, skip, ovr in (("boost_flame_%d" % k, subs + [], None), ("boost_flame_sub_%d" % k, [i for i in range(len(ct.mesh_triangles(fm))) if i not in subs and i not in override], override)):
+            flame_files.update(ctr_mesh_pack.mesh_pack_files(vram, fm, tag, 1.5 / 108.8, up=1, animated=False, honour_cull=False, shade=True, translucent=True,
+                                                             kart_frame=True, pivot_point=(-0.4, 66.0, -63.75), additive=True, smooth=16, exclude=skip, rim_zero=(rim, shell_ids), tri_override=ovr,
+                                                             gain=(set(shell_ids) - set(subs) if not tag.startswith('boost_flame_sub') else None, 1.35) if not tag.startswith('boost_flame_sub') else None))
     # the crate's break-up: the original's 22 flying pieces of 12 frames (a particle, client/CrateBreakParticle), picture sheet and positions
     crate_break_files = ctr_mesh_pack.shard_files(vram, pack["crate_explosion"], "crate_break", 1.0 / 108.8)
     packs = []
@@ -413,17 +459,18 @@ def main():
         files = {"textures/item/pickups.png": sheet(scaled(question_96, (32, 32)), scaled(planks_96, (32, 32)), None, fruit, 32),
                  "models/item/pickup_powerup_crate.json": cube([8, 0, 16, 8]),
                  "models/item/pickup_fruit_crate.json": cube([0, 8, 8, 16]),
-                 "textures/gui/wumpa.png": scaled(wumpa, (24, 16)),
-                 "textures/entity/kart_shadow.png": scaled(shadow, (shadow.width // 2, shadow.height // 2))}
+                 "textures/gui/wumpa.png": scaled(wumpa, (24, 16))}
         files.update(bomb_files)
         files.update(beaker_files)
         files.update(sprite_files(models["fruit"], 32))
         files.update(wumpa_files)
         files.update(crate_break_files)
+        files.update(flame_files)
         files.update(crate_cube_files(crates, 2))
         for i, pimg in enumerate(puffs):
             files["textures/particle/dust_puff_%d.png" % i] = scaled(pimg, (16, 16))
         files["textures/particle/clod.png"] = scaled(clod, (8, 8))
+        files["textures/particle/skid_mark.png"] = skid
         files["textures/particle/smoke_ring.png"] = scaled(ring, (16, 16))
         for pid, img in icons.items():
             files["textures/gui/power/%s.png" % pid] = scaled(img, (max(1, img.width // 2), max(1, img.height // 2)))
@@ -435,16 +482,17 @@ def main():
         files = {"textures/item/pickups.png": sheet(question_96, planks_96, None, fruit, 96),
                  "models/item/pickup_powerup_crate.json": cube([8, 0, 16, 8]),
                  "models/item/pickup_fruit_crate.json": cube([0, 8, 8, 16]),
-                 "textures/gui/wumpa.png": wumpa,
-                 "textures/entity/kart_shadow.png": shadow}
+                 "textures/gui/wumpa.png": wumpa}
         files.update(bomb_files)
         files.update(beaker_files)
         files.update(sprite_files(models["fruit"], 96))
         files.update(wumpa_files)
         files.update(crate_break_files)
+        files.update(flame_files)
         files.update(crate_cube_files(crates, 1))
         files.update({"textures/particle/dust_puff_%d.png" % i: pimg for i, pimg in enumerate(puffs)})
         files["textures/particle/clod.png"] = clod
+        files["textures/particle/skid_mark.png"] = skid
         files["textures/particle/smoke_ring.png"] = ring
         files.update({"textures/gui/power/%s.png" % pid: img for pid, img in icons.items()})
         files.update({"textures/gui/lights/%s.png" % k: img for k, img in lamps.items()})

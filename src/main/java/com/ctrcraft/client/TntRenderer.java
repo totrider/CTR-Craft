@@ -66,11 +66,16 @@ public class TntRenderer extends EntityRenderer<TntEntity> {
             pose.translate(d.x, d.y, d.z);
             if (kart instanceof com.ctrcraft.kart.KartEntity k) {
                 // the head leans with the upper body about the hips (the rider's own lean is RiderPlayerModel's)
-                pose.translate(0.0, 0.3, 0.0);
+                // in the kart's own frame (the model's front is -z): the recline (the top goes to +z) and the lean (a right turn leans right), about the hips
+                float theta = 180.0F - k.renderYawDegrees(partialTick);
+                pose.translate(0.0, com.ctrcraft.kart.KartEntity.HIP_HEIGHT, 0.0);
+                pose.mulPose(Axis.YP.rotationDegrees(theta));
                 pose.mulPose(Axis.ZP.rotationDegrees(-k.steer() * KartRenderer.LEAN));
-                pose.translate(0.0, -0.3, 0.0);
+                pose.mulPose(Axis.XP.rotationDegrees(KartRenderer.RECLINE));
+                pose.mulPose(Axis.YP.rotationDegrees(-theta));
+                pose.translate(0.0, -com.ctrcraft.kart.KartEntity.HIP_HEIGHT, 0.0);
             }
-            pose.translate(0.0, 0.9, 0.0);
+            pose.translate(0.0, com.ctrcraft.kart.KartEntity.HEAD_TOP, 0.0);
         }
         pose.scale(SIZE, SIZE, SIZE);
         if (sprite) {

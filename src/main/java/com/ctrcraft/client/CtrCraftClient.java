@@ -41,6 +41,12 @@ public final class CtrCraftClient {
     public static void registerModels(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event) {
         event.register(TntRenderer.TNT);
         event.register(TntRenderer.NITRO);
+        event.register(KartRenderer.MODEL);
+        event.register(KartRenderer.WHEEL);
+        event.register(KartRenderer.STEERING);
+        for (var flame : KartRenderer.FLAMES) event.register(flame);
+        for (var shell : KartRenderer.FLAME_SHELLS) event.register(shell);
+        event.register(BombRenderer.MODEL);
         event.register(PotionRenderer.GREEN);
         event.register(PotionRenderer.RED);
         event.register(PickupRenderer.WUMPA);
@@ -58,11 +64,19 @@ public final class CtrCraftClient {
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> GuiTextures.clear());
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) BeakerBubbles::load);
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) CrateBreak::load);
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) BombFuse::load);
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) com.ctrcraft.kart.KartWheels::load);
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) com.ctrcraft.kart.KartShadow::load);
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) com.ctrcraft.kart.KartSteering::load);
+        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) com.ctrcraft.kart.KartExhausts::load);
     }
 
     @SubscribeEvent
     public static void registerParticles(net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent event) {
         event.registerSpriteSet(com.ctrcraft.ModParticles.DUST_PUFF.get(), DustPuffParticle.Provider::new);
+        event.registerSpriteSet(com.ctrcraft.ModParticles.SKID_MARK.get(), SkidMarkParticle.Provider::new);
+        event.registerSpriteSet(com.ctrcraft.ModParticles.EXHAUST_SMOKE.get(), sprites -> new ExhaustSmokeParticle.Provider(sprites, false));
+        event.registerSpriteSet(com.ctrcraft.ModParticles.EXHAUST_GLOW.get(), sprites -> new ExhaustSmokeParticle.Provider(sprites, true));
         event.registerSpriteSet(com.ctrcraft.ModParticles.CLOD.get(), ClodParticle.Provider::new);
         event.registerSpriteSet(com.ctrcraft.ModParticles.SMOKE_RING.get(), SmokeRingParticle.Provider::new);
         event.registerSpriteSet(com.ctrcraft.ModParticles.BURST.get(), BurstParticle.Provider::new);

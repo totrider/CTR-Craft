@@ -54,7 +54,7 @@ public class BombEntity extends Entity {
     private static final double GRAVITY = 4.0;
     private static final double TERMINAL = -96.0;
     private static final double FRAMES_PER_TICK = 1.5;
-    private static final double LU = 50.0;
+    private static final double LU = com.ctrcraft.kart.KartScale.LU_PER_BLOCK;
     /** Small steps (0.29 block at full speed): a stair or slope is climbed one riser at a time (the one-block step-up only copes with one rise per move), and a kart cannot be skipped. */
     private static final int SUBSTEPS = 10;
     private static final double SUB = FRAMES_PER_TICK / SUBSTEPS;
@@ -182,6 +182,7 @@ public class BombEntity extends Entity {
                 soundStarted = true;
                 com.ctrcraft.client.BombRollSound.start(this);               // 0x48, looped while it rolls
             }
+            com.ctrcraft.client.BombFx.tick(this);                           // the little fire off the fuse's tip
             return;
         }
         if (!(level() instanceof ServerLevel level)) return;
@@ -202,7 +203,8 @@ public class BombEntity extends Entity {
                 double step = TURN_PER_FRAME * SUB;
                 heading += Math.abs(diff) < TURN_PER_FRAME ? diff : Math.copySign(step, diff);
             }
-            double step = speed * SUB / LU;
+            // a bomb thrown backwards (TRACKER_FLAG_BOMB_BACKWARD) travels the OPPOSITE way along its heading, at 0.3 of the speed: its velocity is negated (RB_MovingExplosive_ThTick)
+            double step = speed * SUB / LU * (backward() ? -1.0 : 1.0);
             double nx = getX() - Math.sin(heading) * step;
             double nz = getZ() + Math.cos(heading) * step;
             double y = getY();

@@ -25,6 +25,14 @@ public final class ModParticles {
     /** A crate breaking: the pieces of the original's break-up animation (client/CrateBreakParticle); its x velocity is the turn about the vertical axis in degrees. */
     public static final DeferredHolder<ParticleType<?>, SimpleParticleType> CRATE_BREAK = PARTICLES.register("crate_break", () -> new SimpleParticleType(false));
 
+    /** The exhaust's smoke: dark, alpha blended (the original's is drawn subtractively: it darkens what is behind it) while the engine just runs. */
+    public static final DeferredHolder<ParticleType<?>, SimpleParticleType> EXHAUST_SMOKE = PARTICLES.register("exhaust_smoke", () -> new SimpleParticleType(false));
+    /** The exhaust's smoke while boosting: bright, additive (the original's other draw mode: it lightens what is behind it). */
+    public static final DeferredHolder<ParticleType<?>, SimpleParticleType> EXHAUST_GLOW = PARTICLES.register("exhaust_glow", () -> new SimpleParticleType(false));
+
+    /** A piece of a skidmark under a skidding wheel (client/SkidMarkParticle): a flat strip from where the wheel was to where it is. */
+    public static final DeferredHolder<ParticleType<?>, SimpleParticleType> SKID_MARK = PARTICLES.register("skid_mark", () -> new SimpleParticleType(true));
+
     private ModParticles() {}
 
     public static void register(IEventBus modEventBus) {

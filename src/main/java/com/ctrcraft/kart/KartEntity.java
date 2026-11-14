@@ -40,6 +40,14 @@ public class KartEntity extends Entity {
     private static final EntityDataAccessor<Integer> DATA_ENGINE =
             SynchedEntityData.defineId(KartEntity.class, EntityDataSerializers.INT);
     /** The ground normal the kart leans on, x and z as bytes (value = n * 127 + 127); 0x7F7F is flat. */
+    /** The kart's colour (RGB): what the tintable parts of its model (the tub, the struts, the seat) are multiplied by. A dye changes it. */
+    private static final EntityDataAccessor<Integer> DATA_COLOUR =
+            SynchedEntityData.defineId(KartEntity.class, EntityDataSerializers.INT);
+    public static final int DEFAULT_COLOUR = 0xD63434;
+    /** The seat's colour (tint index 1 of the model). A dye used while sneaking changes it. */
+    private static final EntityDataAccessor<Integer> DATA_SEAT_COLOUR =
+            SynchedEntityData.defineId(KartEntity.class, EntityDataSerializers.INT);
+    public static final int DEFAULT_SEAT_COLOUR = 0xF0C43C;
     private static final EntityDataAccessor<Integer> DATA_TILT =
             SynchedEntityData.defineId(KartEntity.class, EntityDataSerializers.INT);
     public static final int TILT_FLAT = 0x7F7F;
@@ -61,6 +69,24 @@ public class KartEntity extends Entity {
         builder.define(DATA_FLAGS, 0);
         builder.define(DATA_ENGINE, 0x823C);
         builder.define(DATA_TILT, TILT_FLAT);
+        builder.define(DATA_COLOUR, DEFAULT_COLOUR);
+        builder.define(DATA_SEAT_COLOUR, DEFAULT_SEAT_COLOUR);
+    }
+
+    public int colour() {
+        return entityData.get(DATA_COLOUR);
+    }
+
+    public int seatColour() {
+        return entityData.get(DATA_SEAT_COLOUR);
+    }
+
+    public void setSeatColour(int rgb) {
+        entityData.set(DATA_SEAT_COLOUR, rgb & 0xFFFFFF);
+    }
+
+    public void setColour(int rgb) {
+        entityData.set(DATA_COLOUR, rgb & 0xFFFFFF);
     }
 
     public int getTilt() {
@@ -109,10 +135,28 @@ public class KartEntity extends Entity {
         return Mth.rotLerp(partialTick, yawPrevDeg, yawDeg);
     }
 
+    private double lastX = Double.NaN;
+    private double lastZ = Double.NaN;
+    private float wheelSpin;
+    private float wheelSpinO;
+
+    /** How far the wheels have turned, degrees, positive rolling forward (client side: worked out from how far the kart has moved along the way it faces). */
+    public float wheelSpin(float partialTick) {
+        return Mth.lerp(partialTick, wheelSpinO, wheelSpin);
+    }
+
     @Override
     public void tick() {
         super.tick();
         if (level().isClientSide) {
+            wheelSpinO = wheelSpin;
+            if (!Double.isNaN(lastX)) {
+                double yaw = Math.toRadians(yawDeg);
+                double along = (getX() - lastX) * -Math.sin(yaw) + (getZ() - lastZ) * Math.cos(yaw);
+                wheelSpin += (float) Math.toDegrees(along / KartWheels.radius());
+            }
+            lastX = getX();
+            lastZ = getZ();
             yawPrevDeg = yawDeg;
             yawDeg = KartScale.angleToYaw(getDrawnYawAngle());
             if (FMLEnvironment.dist.isClient()) {
@@ -224,6 +268,16 @@ public class KartEntity extends Entity {
             }
             return InteractionResult.sidedSuccess(level().isClientSide);
         }
+        if (player.getItemInHand(hand).getItem() instanceof net.minecraft.world.item.DyeItem dye) {
+            // a dye in the hand paints the kart: the tub and struts, or the seat when sneaking
+            if (!level().isClientSide) {
+                int rgb = dye.getDyeColor().getTextureDiffuseColor();
+                if (player.isSecondaryUseActive()) setSeatColour(rgb);
+                else setColour(rgb);
+                if (!player.getAbilities().instabuild) player.getItemInHand(hand).shrink(1);
+            }
+            return InteractionResult.sidedSuccess(level().isClientSide);
+        }
         if (player.isSecondaryUseActive()) {
             return InteractionResult.PASS;
         }
@@ -233,9 +287,18 @@ public class KartEntity extends Entity {
         return InteractionResult.SUCCESS;
     }
 
-    /** Where the rider sits, relative to the kart: on the seat of the model, 0.3 block behind the origin, not in the middle. */
-    private static final double SEAT_BACK = 0.3;
-    private static final double SEAT_HEIGHT = 0.2;
+    /** Where the rider sits, relative to the kart: on the seat of the model, 0.07 block behind the origin (the original driver sits 5 units behind the middle), not in the middle. */
+    public static final double SEAT_BACK = 0.07;
+    /**
+     * The seat's height: where the rider's FEET are put, but a player riding is drawn 0.6 lower than that (the vehicle attachment of the player type), and his hips are 0.7 above his
+     * feet, so his hips end up at HIP_HEIGHT = 0.28 above the kart's origin (the original driver's waist is 0.56 up, which was too high on the bulky stand-in kart: seated between that and the first try, -0.04).
+     */
+    private static final double SEAT_HEIGHT = 0.18;
+    public static final double HIP_HEIGHT = SEAT_HEIGHT - 0.6 + 0.7;
+    /** The top of the rider's head (torso and head are 1.17 above the hips). */
+    public static final double HEAD_TOP = HIP_HEIGHT + 1.17;
+    /** The rider's shoulder line (the origin of the player model's body), blocks above the kart's origin: 12 model pixels (0.703) above the hips. */
+    public static final double SHOULDER_HEIGHT = HIP_HEIGHT + 0.703;
 
     @Override
     protected Vec3 getPassengerAttachmentPoint(Entity passenger, EntityDimensions dimensions, float partialTick) {
@@ -328,6 +391,8 @@ public class KartEntity extends Entity {
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         setDrawnYawAngle(tag.getInt("DrawnYaw"));
+        setColour(tag.contains("Colour") ? tag.getInt("Colour") : DEFAULT_COLOUR);
+        setSeatColour(tag.contains("SeatColour") ? tag.getInt("SeatColour") : DEFAULT_SEAT_COLOUR);
         canStartRaces = !tag.contains("CanStartRaces") || tag.getBoolean("CanStartRaces");
         items.wumpa = Math.max(0, Math.min(com.ctrcraft.pickup.ItemManager.MAX_WUMPA, tag.getInt("Wumpa")));
         items.held = tag.getString("HeldPowerup");
@@ -336,6 +401,8 @@ public class KartEntity extends Entity {
     @Override
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putInt("DrawnYaw", getDrawnYawAngle());
+        tag.putInt("Colour", colour());
+        tag.putInt("SeatColour", seatColour());
         tag.putBoolean("CanStartRaces", canStartRaces);
         tag.putInt("Wumpa", items.wumpa);
         tag.putString("HeldPowerup", items.held);

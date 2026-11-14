@@ -71,7 +71,8 @@
           ],
           "texture": "#side"
         }
-      }
+      },
+      "name": "plate_0"
     }
   ]
 }

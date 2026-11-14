@@ -1,0 +1,1042 @@
+{
+  "textures": {
+    "kart": "ctrcraft:item/kart_ctr",
+    "wheel_art": "ctrcraft:item/kart_ctr_wheel",
+    "particle": "ctrcraft:item/kart_ctr"
+  },
+  "elements": [
+    {
+      "from": [
+        5,
+        2,
+        -3
+      ],
+      "to": [
+        11,
+        3,
+        9
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            6,
+            1
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            0.25,
+            8,
+            1.25
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            6,
+            1
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "west": {
+          "uv": [
+            0,
+            0.25,
+            8,
+            1.25
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#kart",
+          "tintindex": 0,
+          "rotation": 90
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ],
+          "texture": "#kart",
+          "tintindex": 0,
+          "rotation": 90
+        }
+      },
+      "name": "tub_0"
+    },
+    {
+      "from": [
+        2,
+        2,
+        9
+      ],
+      "to": [
+        14,
+        3,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            8,
+            1
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            2,
+            1
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            8,
+            1
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            2,
+            1
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            8,
+            2
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            8,
+            2
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        }
+      },
+      "name": "tub_1"
+    },
+    {
+      "from": [
+        2,
+        2.1,
+        1
+      ],
+      "to": [
+        8,
+        2.9,
+        9
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            6,
+            0.8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            0.8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            6,
+            0.8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            0.8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            6,
+            8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            6,
+            8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        }
+      },
+      "name": "tub_1",
+      "rotation": {
+        "origin": [
+          2,
+          2.1,
+          9
+        ],
+        "axis": "y",
+        "angle": -22.5,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        8,
+        2.1,
+        1
+      ],
+      "to": [
+        14,
+        2.9,
+        9
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            6,
+            0.8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            0.8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            6,
+            0.8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            0.8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "up": {
+          "uv": [
+            2,
+            0,
+            8,
+            8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "down": {
+          "uv": [
+            2,
+            0,
+            8,
+            8
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        }
+      },
+      "name": "tub_2",
+      "rotation": {
+        "origin": [
+          14,
+          2.1,
+          9
+        ],
+        "axis": "y",
+        "angle": 22.5,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        4.5,
+        5,
+        11
+      ],
+      "to": [
+        11.5,
+        9,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            8,
+            12,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "east": {
+          "uv": [
+            8,
+            8,
+            12,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "south": {
+          "uv": [
+            8,
+            8,
+            12,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "west": {
+          "uv": [
+            8,
+            8,
+            12,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "up": {
+          "uv": [
+            8,
+            8,
+            12,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "down": {
+          "uv": [
+            8,
+            8,
+            12,
+            12
+          ],
+          "texture": "#kart"
+        }
+      },
+      "name": "engine_1",
+      "rotation": {
+        "origin": [
+          8,
+          5,
+          11
+        ],
+        "axis": "x",
+        "angle": 22.5,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        1.5,
+        1,
+        -4
+      ],
+      "to": [
+        14.5,
+        5,
+        -2
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            8,
+            8,
+            12
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            8,
+            2,
+            12
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "south": {
+          "uv": [
+            0,
+            8,
+            8,
+            12
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "west": {
+          "uv": [
+            0,
+            8,
+            2,
+            12
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "up": {
+          "uv": [
+            0,
+            8,
+            8,
+            10
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "down": {
+          "uv": [
+            0,
+            8,
+            8,
+            10
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        }
+      },
+      "name": "strut_0",
+      "rotation": {
+        "origin": [
+          8,
+          3,
+          -3
+        ],
+        "axis": "x",
+        "angle": 45,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        1.5,
+        2,
+        11
+      ],
+      "to": [
+        14.5,
+        5,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            8,
+            8,
+            11
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            8,
+            4,
+            11
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "south": {
+          "uv": [
+            0,
+            8,
+            8,
+            11
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "west": {
+          "uv": [
+            0,
+            8,
+            4,
+            11
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "up": {
+          "uv": [
+            0,
+            8,
+            8,
+            12
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        },
+        "down": {
+          "uv": [
+            0,
+            8,
+            8,
+            12
+          ],
+          "texture": "#kart",
+          "tintindex": 0
+        }
+      },
+      "name": "strut_1"
+    },
+    {
+      "from": [
+        4,
+        3,
+        4
+      ],
+      "to": [
+        12,
+        4,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            16,
+            0.75
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        },
+        "east": {
+          "uv": [
+            8.5,
+            0,
+            15.5,
+            0.75
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            16,
+            1
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        },
+        "west": {
+          "uv": [
+            8.5,
+            0,
+            15.5,
+            0.75
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            16,
+            7
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        },
+        "down": {
+          "uv": [
+            8,
+            0,
+            16,
+            7
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        }
+      },
+      "name": "seat_0"
+    },
+    {
+      "from": [
+        3,
+        4,
+        10
+      ],
+      "to": [
+        13,
+        11,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            16,
+            7
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            8.75,
+            7
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            16,
+            7
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        },
+        "west": {
+          "uv": [
+            15.25,
+            0,
+            16,
+            7
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            16,
+            0.75
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        },
+        "down": {
+          "uv": [
+            8,
+            7.25,
+            16,
+            8
+          ],
+          "texture": "#kart",
+          "tintindex": 1
+        }
+      },
+      "name": "seat_1",
+      "rotation": {
+        "origin": [
+          8,
+          4,
+          10
+        ],
+        "axis": "x",
+        "angle": 22.5,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        7,
+        2.5,
+        -1
+      ],
+      "to": [
+        9,
+        4.5,
+        7
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            12,
+            10,
+            14
+          ],
+          "texture": "#kart"
+        },
+        "east": {
+          "uv": [
+            8,
+            12,
+            10,
+            14
+          ],
+          "texture": "#kart",
+          "rotation": 180
+        },
+        "south": {
+          "uv": [
+            8,
+            12,
+            10,
+            14
+          ],
+          "texture": "#kart"
+        },
+        "west": {
+          "uv": [
+            8,
+            12,
+            10,
+            14
+          ],
+          "texture": "#kart"
+        },
+        "up": {
+          "uv": [
+            8,
+            12,
+            10,
+            14
+          ],
+          "texture": "#kart",
+          "rotation": 90
+        },
+        "down": {
+          "uv": [
+            8,
+            12,
+            10,
+            14
+          ],
+          "texture": "#kart",
+          "rotation": 270
+        }
+      },
+      "name": "steering_0",
+      "rotation": {
+        "origin": [
+          7.5,
+          2.5,
+          -1
+        ],
+        "axis": "x",
+        "angle": -45,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        2,
+        4,
+        12
+      ],
+      "to": [
+        5,
+        11,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12,
+            8,
+            14,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "east": {
+          "uv": [
+            12,
+            8,
+            14,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "south": {
+          "uv": [
+            12,
+            8,
+            14,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "west": {
+          "uv": [
+            12,
+            8,
+            14,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "up": {
+          "uv": [
+            14,
+            8,
+            16,
+            10
+          ],
+          "texture": "#kart"
+        },
+        "down": {
+          "uv": [
+            14,
+            8,
+            16,
+            10
+          ],
+          "texture": "#kart"
+        }
+      },
+      "name": "exhaust_left_0",
+      "rotation": {
+        "origin": [
+          5,
+          5,
+          13
+        ],
+        "axis": "x",
+        "angle": 45,
+        "rescale": false
+      }
+    },
+    {
+      "from": [
+        11,
+        4,
+        12
+      ],
+      "to": [
+        14,
+        11,
+        15
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12,
+            8,
+            14,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "east": {
+          "uv": [
+            12,
+            8,
+            14,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "south": {
+          "uv": [
+            12,
+            8,
+            14,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "west": {
+          "uv": [
+            12,
+            8,
+            14,
+            12
+          ],
+          "texture": "#kart"
+        },
+        "up": {
+          "uv": [
+            14,
+            8,
+            16,
+            10
+          ],
+          "texture": "#kart"
+        },
+        "down": {
+          "uv": [
+            14,
+            8,
+            16,
+            10
+          ],
+          "texture": "#kart"
+        }
+      },
+      "name": "exhaust_right_0",
+      "rotation": {
+        "origin": [
+          11,
+          5,
+          13
+        ],
+        "axis": "x",
+        "angle": 45,
+        "rescale": false
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        90,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        1
+      ],
+      "scale": [
+        0.35,
+        0.35,
+        0.35
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        90,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "ground": {
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "gui": {
+      "rotation": [
+        30,
+        -135,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        -180,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    }
+  }
+}

@@ -26,6 +26,9 @@ public class DustPuffParticle extends TextureSheetParticle {
         this.friction = 0.9F;
         this.gravity = 0.0F;
         this.hasPhysics = false;
+        this.rCol = 0.86F;                                       // the pictures are white masks (their brightness is the alpha): a light dust colour
+        this.gCol = 0.83F;
+        this.bCol = 0.78F;
         this.roll = random.nextFloat() * (float) (Math.PI * 2.0);
         this.oRoll = this.roll;
         setSpriteFromAge(sprites);

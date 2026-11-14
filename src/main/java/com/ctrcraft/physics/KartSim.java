@@ -404,6 +404,19 @@ public final class KartSim {
 
     /** The powerslide meter's room left in CTR-ms (turbo_MeterRoomLeft, 0 when no slide), its maximum and the point under which it is in the red zone. */
     public int slideMeterRoomLeft() { return state == State.DRIFTING ? turboMeter : 0; }
+    /**
+     * What the exhaust pipes do (VehEmitter_Main, VehEmitter_Exhaust), while driving: 0 no smoke, 1 the BRIGHT, additive puff (the emitter's default draw mode), 2 the DARK, subtractive
+     * one. The meter's room left (turbo_MeterRoomLeft) is out of its window when it is under 129 (and it is 0 when not sliding) or over (low-room warning + 2) * 32; out of the window the
+     * puff is bright and, if the turbo flame is on and no failed boost's smoke is pending, there is no smoke at all; inside it (a powerslide whose meter is in the last part, where a press
+     * boosts) the puff is dark.
+     */
+    public int exhaustMode() {
+        int room = slideMeterRoomLeft();
+        boolean out = room < 129 || TURBO_LOW_ROOM_MS + 2 * 32 < room;
+        if (failedBoost == 0 && out && fireSize() > 0) return 0;
+        return out ? 1 : 2;
+    }
+
     public static int slideMeterMaxRoom() { return TURBO_MAX_ROOM_MS; }
     public static int slideMeterLowRoom() { return TURBO_LOW_ROOM_MS; }
 

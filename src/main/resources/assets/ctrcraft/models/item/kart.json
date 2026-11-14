@@ -70,7 +70,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "chassis_0"
     },
     {
       "from": [
@@ -138,7 +139,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "nose_0"
     },
     {
       "from": [
@@ -206,7 +208,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "body_0"
     },
     {
       "from": [
@@ -274,7 +277,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "seat_0"
     },
     {
       "from": [
@@ -342,7 +346,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "seat_1"
     },
     {
       "from": [
@@ -410,7 +415,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "steering_0"
     },
     {
       "from": [
@@ -478,7 +484,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "steering_1"
     },
     {
       "from": [
@@ -546,7 +553,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "wheel_front_left_0"
     },
     {
       "from": [
@@ -614,7 +622,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "wheel_front_right_0"
     },
     {
       "from": [
@@ -682,7 +691,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "wheel_rear_left_0"
     },
     {
       "from": [
@@ -750,7 +760,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "wheel_rear_right_0"
     },
     {
       "from": [
@@ -818,7 +829,8 @@
           ],
           "texture": "#kart"
         }
-      }
+      },
+      "name": "exhaust_0"
     }
   ],
   "display": {

@@ -1,0 +1,61 @@
+{
+  "source": "blockbench/kart/kart_ctr.bbmodel, the wheel_* marker boxes (tools/make_kart_ctr.py)",
+  "wheels": [
+    {
+      "name": "front_left",
+      "front": true,
+      "pos": [
+        -0.5,
+        0.21875,
+        -0.6875
+      ],
+      "size": [
+        0.1875,
+        0.4375,
+        0.4375
+      ]
+    },
+    {
+      "name": "front_right",
+      "front": true,
+      "pos": [
+        0.5,
+        0.21875,
+        -0.6875
+      ],
+      "size": [
+        0.1875,
+        0.4375,
+        0.4375
+      ]
+    },
+    {
+      "name": "rear_left",
+      "front": false,
+      "pos": [
+        -0.5,
+        0.21875,
+        0.3125
+      ],
+      "size": [
+        0.1875,
+        0.4375,
+        0.4375
+      ]
+    },
+    {
+      "name": "rear_right",
+      "front": false,
+      "pos": [
+        0.5,
+        0.21875,
+        0.3125
+      ],
+      "size": [
+        0.1875,
+        0.4375,
+        0.4375
+      ]
+    }
+  ]
+}

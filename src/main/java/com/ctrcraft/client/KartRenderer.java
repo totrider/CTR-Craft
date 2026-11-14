@@ -3,6 +3,7 @@ package com.ctrcraft.client;
 import com.ctrcraft.CtrCraftMod;
 import com.ctrcraft.kart.KartEntity;
 import com.ctrcraft.kart.KartFlags;
+import com.ctrcraft.kart.KartWheels;
 import com.ctrcraft.kart.KartScale;
 import com.ctrcraft.physics.AirTilt;
 import com.ctrcraft.physics.Wheelie;
@@ -11,6 +12,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -30,14 +32,38 @@ import org.joml.Vector3f;
  * The model's front is north (-z); the kart's heading turns it.
  */
 public class KartRenderer extends EntityRenderer<KartEntity> {
-    private static final ModelResourceLocation MODEL =
-            ModelResourceLocation.inventory(ResourceLocation.fromNamespaceAndPath(CtrCraftMod.MODID, "kart"));
+    /** The baseline kart (blockbench/kart/kart_ctr.bbmodel, the original's proportions); the spawn item keeps the older item/kart model. */
+    public static final ModelResourceLocation MODEL =
+            ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(CtrCraftMod.MODID, "item/kart_ctr"));
+    /** The wheel (blockbench/kart/kart_wheel.bbmodel): an octagonal prism along x, drawn four times, spinning, the front two steering. */
+    public static final ModelResourceLocation WHEEL =
+            ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(CtrCraftMod.MODID, "item/kart_wheel"));
+    /** How far the front wheels turn at full lock, degrees. */
+    private static final float WHEEL_LOCK = 25.0F;
+    /** The wheel model's own size (blockbench/kart/kart_wheel.bbmodel): 3 pixels thick, 7 across. */
+    private static final float WHEEL_THICKNESS = 3.0F / 16.0F;
+    private static final float WHEEL_DIAMETER = 7.0F / 16.0F;
+    /** The steering wheel (blockbench/kart/kart_ctr.bbmodel's steering_1 and up, made into a model of its own by tools/make_kart_ctr.py): turned about its axis by the steering. */
+    public static final ModelResourceLocation STEERING =
+            ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(CtrCraftMod.MODID, "item/kart_steering"));
+    /** The eight models of the boost flame (the original's animation; the jar has one shape for all). */
+    public static final ModelResourceLocation[] FLAMES = new ModelResourceLocation[8];
+    static {
+        for (int k = 0; k < 8; k++) FLAMES[k] = ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(CtrCraftMod.MODID, "item/pickup_boost_flame_" + k));
+    }
+    /** The flame's outer shell, which the game draws subtractively (the pack has it; the jar's is empty). */
+    public static final ModelResourceLocation[] FLAME_SHELLS = new ModelResourceLocation[8];
+    static {
+        for (int k = 0; k < 8; k++) FLAME_SHELLS[k] = ModelResourceLocation.standalone(ResourceLocation.fromNamespaceAndPath(CtrCraftMod.MODID, "item/pickup_boost_flame_sub_" + k));
+    }
+    /** How far the wheel turns at full lock, degrees. */
+    public static final float STEERING_LOCK = 25.0F;
     private static final Direction[] SIDES = { Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, null };
 
     private static final ResourceLocation SHADOW = ResourceLocation.fromNamespaceAndPath(CtrCraftMod.MODID, "textures/entity/kart_shadow.png");
     /** The shadow's size in blocks: a little larger than the kart, as the original's (front at the top of the picture). */
-    private static final float SHADOW_HALF_WIDTH = 0.8F;
-    private static final float SHADOW_HALF_LENGTH = 1.0F;
+    /** The shadow picture's own alpha (up to 0.5 to 0.75) is blended further: it read as a solid patch on light ground. */
+    private static final int SHADOW_ALPHA = 190;
 
     private final RandomSource random = RandomSource.create();
 
@@ -72,17 +98,21 @@ public class KartRenderer extends EntityRenderer<KartEntity> {
         }
         VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucent(SHADOW));
         PoseStack.Pose p = pose.last();
-        float hw = SHADOW_HALF_WIDTH;
-        float hl = SHADOW_HALF_LENGTH;
-        shadowVertex(vc, p, -hw, -hl, 0.0F, 0.0F, light);
-        shadowVertex(vc, p, -hw, hl, 0.0F, 1.0F, light);
-        shadowVertex(vc, p, hw, hl, 1.0F, 1.0F, light);
-        shadowVertex(vc, p, hw, -hl, 1.0F, 0.0F, light);
+        // the shadow picture is made from the kart's own model seen from above (tools/make_kart_shadow.py) and lies where its json says; without that, the span of the wheels
+        com.ctrcraft.kart.KartShadow.Box sb = com.ctrcraft.kart.KartShadow.get();
+        float x0 = sb != null ? sb.x0() : -KartWheels.halfWidth();
+        float x1 = sb != null ? sb.x1() : KartWheels.halfWidth();
+        float z0 = sb != null ? sb.z0() : KartWheels.frontEdge();
+        float z1 = sb != null ? sb.z1() : KartWheels.rearEdge();
+        shadowVertex(vc, p, x0, z0, 0.0F, 0.0F, light);
+        shadowVertex(vc, p, x0, z1, 0.0F, 1.0F, light);
+        shadowVertex(vc, p, x1, z1, 1.0F, 1.0F, light);
+        shadowVertex(vc, p, x1, z0, 1.0F, 0.0F, light);
         pose.popPose();
     }
 
     private static void shadowVertex(VertexConsumer vc, PoseStack.Pose p, float x, float z, float u, float v, int light) {
-        vc.addVertex(p, x, 0.0F, z).setColor(255, 255, 255, 255).setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(p, 0.0F, 1.0F, 0.0F);
+        vc.addVertex(p, x, 0.0F, z).setColor(255, 255, 255, SHADOW_ALPHA).setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(p, 0.0F, 1.0F, 0.0F);
     }
 
     public KartRenderer(EntityRendererProvider.Context context) {
@@ -115,6 +145,9 @@ public class KartRenderer extends EntityRenderer<KartEntity> {
     public static final float BODY_TWIST = 19.0F;
     public static final float HEAD_TWIST = 36.0F;
     public static final float LEAN = 20.0F;
+    /** The rider sits reclined (degrees back from upright, about the hips) with his legs raised that much more than the seated pose has them. */
+    public static final float RECLINE = 18.0F;
+    public static final float LEG_LIFT = 15.0F;
 
     /**
      * Turns the pose stack the way the kart's body is turned (the lean onto the ground, the boost wheelie and, after an explosion, the tumble), about the kart's own origin, for something that
@@ -156,6 +189,79 @@ public class KartRenderer extends EntityRenderer<KartEntity> {
         }
         pose.mulPose(Axis.YP.rotationDegrees(-theta));
         pose.translate(-ox, -oy, -oz);
+    }
+
+    /** The four wheels at the kart's origin frame: each spins about its axle (x), the front two are turned into the steering first. */
+    private void drawWheels(KartEntity entity, PoseStack pose, MultiBufferSource buffers, int light, float partialTick) {
+        BakedModel wheel = Minecraft.getInstance().getModelManager().getModel(WHEEL);
+        float spin = entity.wheelSpin(partialTick);
+        float steer = entity.steer() * WHEEL_LOCK;
+        VertexConsumer consumer = buffers.getBuffer(RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS));
+        java.util.List<KartWheels.Wheel> list = KartWheels.get();
+        for (KartWheels.Wheel w : list) {
+            pose.pushPose();
+            pose.translate(w.x(), w.y(), w.z());
+            if (w.front()) pose.mulPose(Axis.YP.rotationDegrees(-steer));          // the model's front is -z: a right turn (+steer) is a negative turn about y
+            pose.mulPose(Axis.XP.rotationDegrees(-spin));                        // rolling forward (towards -z) turns the top that way
+            pose.scale(w.thickness() / WHEEL_THICKNESS, w.height() / WHEEL_DIAMETER, w.length() / WHEEL_DIAMETER);       // the marker's size: the model is 3 by 7 by 7 pixels
+            pose.translate(-0.5, -0.5, -0.5);
+            for (Direction side : SIDES) {
+                random.setSeed(42L);
+                for (var quad : wheel.getQuads(null, side, random)) {
+                    consumer.putBulkData(pose.last(), quad, 1.0F, 1.0F, 1.0F, 1.0F, light, OverlayTexture.NO_OVERLAY);
+                }
+            }
+            pose.popPose();
+        }
+    }
+
+    /**
+     * The boost flame (VehFire / VehTurbo): while the kart's turbo is lit, a flame model at each exhaust pipe, the second one mirrored, scaled by fireSize / 8 (4 to 8), whose picture
+     * crawls through the eight models of the animation (1.5 frames a tick, the second pipe three frames on) and which fades out as the turbo dies. Drawn bright and see-through (the game adds
+     * it to the screen); the super turbo's is tinted blue. The model's origin is the middle of its root, which goes on the pipe's tip, the flame streaming back. Pose stack: the kart's frame.
+     */
+    private void drawBoostFlames(KartEntity entity, PoseStack pose, MultiBufferSource buffers, float partialTick) {
+        int flags = entity.getVisualFlags();
+        int fire = KartFlags.fireSize(flags);
+        float alpha = (8 - KartFlags.fade(flags)) / 8.0F;
+        boolean ultra = KartFlags.has(flags, KartFlags.ULTRA);
+        if (DebugCommands.flameSize > 0) {                    // /ctrdebug flame
+            fire = DebugCommands.flameSize;
+            alpha = 1.0F;
+            ultra = DebugCommands.flameUltra;
+        }
+        if (fire <= 0) return;
+        float lum = DebugCommands.flameBright;
+        float r = (ultra ? 0.45F : 1.0F) * lum;
+        float g = (ultra ? 0.65F : 1.0F) * lum;
+        float b = lum;
+        float size = fire / 8.0F;
+        float time = (entity.tickCount + partialTick) * 1.5F;
+        VertexConsumer add = buffers.getBuffer(AdditiveTypes.BLOCK_ATLAS);
+        VertexConsumer take = buffers.getBuffer(AdditiveTypes.BLOCK_ATLAS_SUBTRACT);
+        int i = 0;
+        for (com.ctrcraft.kart.KartExhausts.Pipe pipe : com.ctrcraft.kart.KartExhausts.get()) {
+            int frame = ((int) time + 3 * i) & 7;
+            i++;
+            pose.pushPose();
+            // the pipes are measured from the kart's origin, and the pose stack here is in the baked model's frame (shifted by -0.5 in x and z): shift back
+            pose.translate(pipe.x() + 0.5 + (pipe.x() < 0.0F ? -DebugCommands.flameDx : DebugCommands.flameDx), pipe.y() + DebugCommands.flameDy, pipe.z() + 0.5 + DebugCommands.flameDz);
+            float turn = DebugCommands.flameRotX ? -1.0F : 1.0F;       // half a turn about x: y and z negated
+            pose.scale((pipe.x() < 0.0F ? -size : size) * (DebugCommands.flameFlipX ? -1.0F : 1.0F), size * turn, size * turn * (DebugCommands.flameFlipZ ? -1.0F : 1.0F));
+            pose.translate(-0.5, -0.5, -0.5);
+            drawFlame(Minecraft.getInstance().getModelManager().getModel(FLAME_SHELLS[frame]), pose, take, alpha, alpha, alpha, alpha);
+            drawFlame(Minecraft.getInstance().getModelManager().getModel(FLAMES[frame]), pose, add, r, g, b, alpha);
+            pose.popPose();
+        }
+    }
+
+    private void drawFlame(BakedModel flame, PoseStack pose, VertexConsumer vc, float r, float g, float b, float a) {
+        for (Direction side : SIDES) {
+            random.setSeed(42L);
+            for (var quad : flame.getQuads(null, side, random)) {
+                vc.putBulkData(pose.last(), quad, r, g, b, a, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+            }
+        }
     }
 
     @Override
@@ -204,14 +310,37 @@ public class KartRenderer extends EntityRenderer<KartEntity> {
             pose.scale((float) (1.0 + wobble / 4.0), 1.0F, (float) (1.0 + wobble * 6.0 / 40.0));
             pose.translate(0.0, -0.3, 0.0);
         }
+        drawWheels(entity, pose, buffers, packedLight, partialTick);
         pose.translate(-0.5, 0.0, -0.5);
         VertexConsumer consumer = buffers.getBuffer(RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS));
+        // the faces with a tint index (grey scale in the texture) are multiplied by a colour of the kart's: index 0 (the tub and struts) its body colour, 1 (the seat) its seat colour
+        int rgb = entity.colour();
+        int seat = entity.seatColour();
         for (Direction side : SIDES) {
             random.setSeed(42L);
             for (var quad : model.getQuads(null, side, random)) {
-                consumer.putBulkData(pose.last(), quad, 1.0F, 1.0F, 1.0F, 1.0F, packedLight, OverlayTexture.NO_OVERLAY);
+                int c = quad.getTintIndex() == 0 ? rgb : quad.getTintIndex() == 1 ? seat : 0xFFFFFF;
+                consumer.putBulkData(pose.last(), quad, ((c >> 16) & 255) / 255.0F, ((c >> 8) & 255) / 255.0F, (c & 255) / 255.0F, 1.0F, packedLight, OverlayTexture.NO_OVERLAY);
             }
         }
+        // the steering wheel: its own model, turned about the axis of the wheel (through its bar's middle, along the way its face looks, towards the driver) by the steering; the rod,
+        // which is part of the kart's model, stays. Seen from the driver a right turn (+steer) turns the wheel clockwise, a negative turn about that axis.
+        com.ctrcraft.kart.KartSteering.Axis sa = com.ctrcraft.kart.KartSteering.get();
+        if (sa != null) {
+            BakedModel wheelModel = Minecraft.getInstance().getModelManager().getModel(STEERING);
+            pose.pushPose();
+            pose.translate(sa.px(), sa.py(), sa.pz());
+            pose.mulPose(new org.joml.Quaternionf().rotationAxis((float) Math.toRadians(-entity.steer() * STEERING_LOCK), sa.ax(), sa.ay(), sa.az()));
+            pose.translate(-sa.px(), -sa.py(), -sa.pz());
+            for (Direction side : SIDES) {
+                random.setSeed(42L);
+                for (var quad : wheelModel.getQuads(null, side, random)) {
+                    consumer.putBulkData(pose.last(), quad, 1.0F, 1.0F, 1.0F, 1.0F, packedLight, OverlayTexture.NO_OVERLAY);
+                }
+            }
+            pose.popPose();
+        }
+        drawBoostFlames(entity, pose, buffers, partialTick);
         pose.popPose();
         super.render(entity, entityYaw, partialTick, pose, buffers, packedLight);
     }
